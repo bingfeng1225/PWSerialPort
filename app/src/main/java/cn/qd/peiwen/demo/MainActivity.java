@@ -2,12 +2,13 @@ package cn.qd.peiwen.demo;
 
 
 import android.os.Bundle;
-import android.system.OsConstants;
 import android.util.Log;
 import android.view.View;
 
+
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import androidx.appcompat.app.AppCompatActivity;
 import cn.qd.peiwen.serialport.SerialPort;
@@ -33,7 +34,10 @@ public class MainActivity extends AppCompatActivity {
                 sendMessage();
                 break;
             case R.id.write:
-                writeFile();
+                writeFile("1");
+                break;
+            case R.id.read:
+                writeFile("0");
                 break;
             case R.id.close:
                 closeSerialPort();
@@ -45,51 +49,79 @@ public class MainActivity extends AppCompatActivity {
         if (this.serialPort != null) {
             return;
         }
-        this.serialPort = new SerialPortBuilder()
-                .baudrate(115200)
-                .path("dev/ttyUSB0")
-                .build();
-        new ReadThread().start();
+        try {
+            this.serialPort = new SerialPortBuilder()
+                    .path("/dev/ttyUSB0")
+                    .baudrate(115200)
+                    .build();
+            ReadThread thread = new ReadThread();
+            Log.e("SerialPort", "创建读取线程-----------------" + this);
+            thread.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-
     private class ReadThread extends Thread {
+        public ReadThread() {
+        }
+
         @Override
         public void run() {
             super.run();
+            byte[] data = new byte[256];
             while (serialPort != null) {
-                byte[] data = new byte[256];
                 try {
-                    int len = serialPort.inputStream().read(data);
-                    Log.e("SerialPort", "读取长度:" + len);
-                } catch (IOException e) {
+                    int len = serialPort.readBuffer(data, 256);
+                    if (len > 0) {
+                        Log.e("SerialPort", toHexString(data, 0, len));
+                    }
+                } catch (Exception e) {
                     e.printStackTrace();
                     break;
                 }
             }
+            Log.e("SerialPort", "读取线程释放-----------------" + this);
         }
+    }
+
+    public String toHexString(byte[] data, int offset, int len) {
+        if (data == null) {
+            return null;
+        }
+        if (offset < 0 || offset > data.length - 1) {
+            return null;
+        }
+        if (len < 0 || offset + len > data.length) {
+            return null;
+        }
+        StringBuffer buffer = new StringBuffer();
+        for (int i = offset; i < offset + len; i++) {
+            buffer.append(String.format("0x%02X ", data[i]));
+        }
+        return buffer.toString();
     }
 
     private void sendMessage() {
         try {
             if (null != this.serialPort) {
                 byte[] bytes = {(byte) 0xF5, (byte) 0x09, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x09, (byte) 0xF5};
-                this.serialPort.outputStream().write(bytes);
+                this.serialPort.writeBuffer(bytes,bytes.length);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void writeFile() {
+    private void writeFile(String content) {
         long start = System.currentTimeMillis();
-        SerialPort.writeFile("/sdcard/pw.log","0");
-        Log.e("SerialPort","写文件耗时:" + (System.currentTimeMillis() - start));
+        SerialPort.writeFile("/sys/class/gpio/gpio24/value", content);
+        Log.e("SerialPort", "写文件耗时:" + (System.currentTimeMillis() - start));
     }
 
     private void closeSerialPort() {
         if (null != this.serialPort) {
-            this.serialPort.close();
+            this.serialPort.release();
             this.serialPort = null;
         }
     }

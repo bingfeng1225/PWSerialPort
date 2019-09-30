@@ -11,22 +11,37 @@ extern "C" {
  * Class:     SerialPort
  * Method:    open
  */
-JNIEXPORT jobject JNICALL Java_cn_qd_peiwen_serialport_SerialPort_open
-        (JNIEnv *, jclass, jstring, jint, jint, jint, jint, jint, jint);
-
+JNIEXPORT jlong JNICALL
+Java_cn_qd_peiwen_serialport_SerialPort_open
+        (JNIEnv *, jobject, jstring, jint, jint, jint, jint, jint);
+/*
+ * Class:     SerialPort
+ * Method:    read
+ */
+JNIEXPORT jint JNICALL
+Java_cn_qd_peiwen_serialport_SerialPort_read
+        (JNIEnv *, jobject, jlong, jbyteArray, jint);
+/*
+ * Class:     SerialPort
+ * Method:    read
+ */
+JNIEXPORT jint JNICALL
+Java_cn_qd_peiwen_serialport_SerialPort_write
+        (JNIEnv *, jobject, jlong, jbyteArray, jint);
 /*
  * Class:     SerialPort
  * Method:    close
  */
-JNIEXPORT void JNICALL Java_cn_qd_peiwen_serialport_SerialPort_writeFile
+JNIEXPORT void JNICALL
+Java_cn_qd_peiwen_serialport_SerialPort_close
+        (JNIEnv *, jobject, jlong);
+/*
+ * Class:     SerialPort
+ * Method:    writeFile
+ */
+JNIEXPORT void JNICALL
+Java_cn_qd_peiwen_serialport_SerialPort_writeFile
         (JNIEnv *, jclass, jstring, jstring);
-
-/*
- * Class:     SerialPort
- * Method:    close
- */
-JNIEXPORT void JNICALL Java_cn_qd_peiwen_serialport_SerialPort_close
-        (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

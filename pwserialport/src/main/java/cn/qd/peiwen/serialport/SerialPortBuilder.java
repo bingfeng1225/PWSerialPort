@@ -7,12 +7,11 @@ import java.io.File;
 public class SerialPortBuilder {
     //串口地址
     private String path;
-    //打开方式:例如阻塞、非阻塞
-    private int flag = 0;
     //奇偶校验:
     // 0 --> 无校验
     // 1 --> 奇校验
     // 2 --> 偶校验
+    // 3 --> Space校验
     private int parity = 0;
     //停止位:
     // 1 --> 1位
@@ -35,10 +34,7 @@ public class SerialPortBuilder {
     public SerialPortBuilder() {
 
     }
-    public SerialPortBuilder flag(int flag) {
-        this.flag = flag;
-        return this;
-    }
+
 
     public SerialPortBuilder path(String path) {
         this.path = path;
@@ -70,6 +66,27 @@ public class SerialPortBuilder {
         return this;
     }
 
+    public SerialPort build() {
+        File device = new File(path);
+        if (!checkDevice(device)) {
+            Log.e("SerialPort", "Missing read/write permission " + path);
+            return null;
+        }
+        try {
+            return new SerialPort(
+                    device,
+                    this.baudrate,
+                    this.stopbits,
+                    this.databits,
+                    this.parity,
+                    this.flowControl
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private boolean checkDevice(File device) {
         if (device.canRead() && device.canWrite()) {
             return true;
@@ -90,20 +107,5 @@ public class SerialPortBuilder {
             e.printStackTrace();
             return false;
         }
-    }
-
-    public SerialPort build() {
-        File device = new File(path);
-        if(!checkDevice(device)){
-            Log.e("SerialPort","Missing read/write permission " + path);
-            return null;
-        }
-        try {
-            return new SerialPort(device,this.baudrate,this.stopbits,this.databits,this.parity,this.flowControl,this.flag);
-        }catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
-
     }
 }

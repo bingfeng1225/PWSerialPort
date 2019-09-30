@@ -7,39 +7,61 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class SerialPort {
-    private FileDescriptor descriptor;
-    private FileInputStream inputStream;
-    private FileOutputStream outputStream;
+    private long descriptor;
+    private boolean released = false;
 
-    public SerialPort(File device, int baudrate, int stopbits, int databits, int parity, int flowControl, int flag) throws IOException {
-        this.descriptor = open(device.getAbsolutePath(), baudrate, stopbits, databits, parity, flowControl, flag);
-        if (descriptor == null) {
+    public SerialPort(File device, int baudrate, int stopbits, int databits, int parity, int flowControl) throws IOException {
+        this.descriptor = this.open(device.getAbsolutePath(), baudrate, stopbits, databits, parity, flowControl);
+        if (this.descriptor == 0) {
             throw new IOException();
         }
-        inputStream = new FileInputStream(descriptor);
-        outputStream = new FileOutputStream(descriptor);
     }
 
-    public FileInputStream inputStream() {
-        return inputStream;
+    public int readBuffer(byte[] data, int len) throws IOException {
+        if (this.released) {
+            throw new IOException("Serial port released");
+        }
+        if (data == null) {
+            throw new IOException("Serial port read buffer can not be null");
+        }
+        int length = this.read(this.descriptor, data, len);
+        if(length == -1){
+            throw new IOException("Serial port read error");
+        }
+        return length;
     }
 
-    public FileOutputStream outputStream() {
-        return outputStream;
+    public int writeBuffer(byte[] data, int len) throws IOException {
+        if (this.released) {
+            throw new IOException("Serial port released");
+        }
+        if (data == null) {
+            throw new IOException("Serial port write buffer can not be null");
+        }
+        int length = this.write(this.descriptor, data, len);
+        if(length == -1){
+            throw new IOException("Serial port write error");
+        }
+        return length;
     }
 
     public void release() {
-        this.close();
-        this.descriptor = null;
-        this.inputStream = null;
-        this.outputStream = null;
+        this.released = true;
+        if (this.descriptor != 0) {
+            this.close(this.descriptor);
+            this.descriptor = 0;
+        }
     }
-
-    private native static FileDescriptor open(String path, int baudrate, int stopbits, int databits, int parity, int flowControl, int flag); //打开串口
 
     public native static void writeFile(String path, String content);
 
-    public native void close(); //关闭串口
+    private native long open(String path, int baudrate, int stopbits, int databits, int parity, int flowControl); //打开串口
+
+    private native int read(long descriptor, byte[] buffer, int len);
+
+    private native int write(long descriptor, byte[] buffer, int len);
+
+    private native void close(long descriptor); //关闭串口
 
     static {
         System.loadLibrary("serial_port"); // 载入底层C文件 so库链接文件

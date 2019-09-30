@@ -11,13 +11,12 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import androidx.appcompat.app.AppCompatActivity;
-import cn.qd.peiwen.serialport.SerialPort;
-import cn.qd.peiwen.serialport.SerialPortBuilder;
+import cn.qd.peiwen.serialport.PWSerialPort;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private SerialPort serialPort;
+    private PWSerialPort serialPort;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         try {
-            this.serialPort = new SerialPortBuilder()
+            this.serialPort = new PWSerialPort.Builder()
                     .path("/dev/ttyUSB0")
                     .baudrate(115200)
                     .build();
@@ -115,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void writeFile(String content) {
         long start = System.currentTimeMillis();
-        SerialPort.writeFile("/sys/class/gpio/gpio24/value", content);
+        PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", content);
         Log.e("SerialPort", "写文件耗时:" + (System.currentTimeMillis() - start));
     }
 

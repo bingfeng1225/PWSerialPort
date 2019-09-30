@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "log.h"
-#include "SerialPort.h"
 #include "PWSerialPort.h"
+#include "cn_qd_peiwen_serialport_PWSerialPort.h"
 
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    open
  * Signature: (Ljava/lang/String;II)Ljava/io/FileDescriptor;
  */
 JNIEXPORT jlong JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_open
+Java_cn_qd_peiwen_serialport_PWSerialPort_open
         (JNIEnv *env, jobject thiz, jstring path, jint baudrate, jint stopBits, jint dataBits,
          jint parity, jint flowControl) {
     PWSerialPort *serial = new PWSerialPort();
@@ -32,23 +31,23 @@ Java_cn_qd_peiwen_serialport_SerialPort_open
     serial->setDataBits(dataBits);
     serial->setStopBits(stopBits);
     serial->setFlowControl(flowControl);
-    jboolean iscopy;
-    const char *path_utf = env->GetStringUTFChars(path, &iscopy);
+    const char *path_utf = env->GetStringUTFChars(path, 0);
     serial->setFilePath(path_utf);
     env->ReleaseStringUTFChars(path, path_utf);
     if (serial->serialPortOpen() == -1) {
         delete serial;
-        return NULL;
+        serial = NULL;
+        return 0;
     }
     return (jlong) serial;
 }
 
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    read
  */
 JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_read
+Java_cn_qd_peiwen_serialport_PWSerialPort_read
         (JNIEnv *env, jobject thiz, jlong addr, jbyteArray buffer, jint len) {
     BYTE data[len];
     PWSerialPort *serial = (PWSerialPort *) addr;
@@ -60,11 +59,11 @@ Java_cn_qd_peiwen_serialport_SerialPort_read
     return ret;
 }
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    write
  */
 JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_write
+Java_cn_qd_peiwen_serialport_PWSerialPort_write
         (JNIEnv *env, jobject thiz, jlong addr, jbyteArray buffer, jint len) {
 
     jbyte *data = env->GetByteArrayElements(buffer, 0);
@@ -81,11 +80,11 @@ Java_cn_qd_peiwen_serialport_SerialPort_write
 }
 
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    close
  */
 JNIEXPORT void JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_close
+Java_cn_qd_peiwen_serialport_PWSerialPort_close
         (JNIEnv *env, jobject thiz, jlong addr) {
     PWSerialPort *serial = (PWSerialPort *) addr;
     serial->serialPortClose();
@@ -94,11 +93,11 @@ Java_cn_qd_peiwen_serialport_SerialPort_close
 
 
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    writeFile
  */
 JNIEXPORT void JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_writeFile
+Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile
         (JNIEnv *env, jclass cls, jstring path, jstring content) {
     jboolean iscopy;
     const char *path_utf = env->GetStringUTFChars(path, &iscopy);

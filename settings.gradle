@@ -1,2 +1,2 @@
 include ':app', ':pwserialport'
-rootProject.name='SerialPort'
+rootProject.name='PWSerialPort'

@@ -2,45 +2,45 @@
 #include <jni.h>
 /* Header for class android_serialport_api_SerialPort */
 
-#ifndef _Included_cn_qd_peiwen_serialport_SerialPort
-#define _Included_cn_qd_peiwen_serialport_SerialPort
+#ifndef _Included_cn_qd_peiwen_serialport_PWSerialPort
+#define _Included_cn_qd_peiwen_serialport_PWSerialPort
 #ifdef __cplusplus
 extern "C" {
 #endif
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    open
  */
 JNIEXPORT jlong JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_open
+Java_cn_qd_peiwen_serialport_PWSerialPort_open
         (JNIEnv *, jobject, jstring, jint, jint, jint, jint, jint);
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    read
  */
 JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_read
+Java_cn_qd_peiwen_serialport_PWSerialPort_read
         (JNIEnv *, jobject, jlong, jbyteArray, jint);
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    read
  */
 JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_write
+Java_cn_qd_peiwen_serialport_PWSerialPort_write
         (JNIEnv *, jobject, jlong, jbyteArray, jint);
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    close
  */
 JNIEXPORT void JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_close
+Java_cn_qd_peiwen_serialport_PWSerialPort_close
         (JNIEnv *, jobject, jlong);
 /*
- * Class:     SerialPort
+ * Class:     PWSerialPort
  * Method:    writeFile
  */
 JNIEXPORT void JNICALL
-Java_cn_qd_peiwen_serialport_SerialPort_writeFile
+Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile
         (JNIEnv *, jclass, jstring, jstring);
 
 #ifdef __cplusplus

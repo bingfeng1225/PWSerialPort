@@ -16,9 +16,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/errno.h>
-
+#include "android/log.h"
 
 typedef unsigned char BYTE;
+static const char *TAG = "PWSerialPort";
 
 class PWSerialPort {
 public:
@@ -76,5 +77,6 @@ private:
     std::string filePath;
 };
 
+#define LOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, TAG, fmt, ##args)
 
 #endif //SERIALPORT_PWSERIALPORT_H

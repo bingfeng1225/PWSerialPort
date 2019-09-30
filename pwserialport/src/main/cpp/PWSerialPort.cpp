@@ -2,7 +2,6 @@
 // Created by Nick on 2019-09-29.
 //
 
-#include "log.h"
 #include "PWSerialPort.h"
 
 PWSerialPort::PWSerialPort() {
@@ -113,7 +112,7 @@ int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
 
     struct timeval time;
     /*设置超时*/
-    time.tv_sec = 2;
+    time.tv_sec = 1;
     time.tv_usec = 0;
     /*实现串口的多路I/O*/
     int ret = select(this->fd + 1, &rfds, NULL, NULL, &time);

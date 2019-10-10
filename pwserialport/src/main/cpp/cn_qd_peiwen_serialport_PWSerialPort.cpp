@@ -48,9 +48,9 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_open
  */
 JNIEXPORT jint JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_read
-        (JNIEnv *env, jobject thiz, jlong addr, jbyteArray buffer, jint len) {
+        (JNIEnv *env, jobject thiz, jlong serialPort, jbyteArray buffer, jint len) {
     BYTE data[len];
-    PWSerialPort *serial = (PWSerialPort *) addr;
+    PWSerialPort *serial = (PWSerialPort *) serialPort;
     int ret = serial->serialPortRead(data, len);
     if (ret > 0) {
         jbyte *bytes = reinterpret_cast<jbyte *>(data);
@@ -64,13 +64,13 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_read
  */
 JNIEXPORT jint JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_write
-        (JNIEnv *env, jobject thiz, jlong addr, jbyteArray buffer, jint len) {
+        (JNIEnv *env, jobject thiz, jlong serialPort, jbyteArray buffer, jint len) {
 
     jbyte *data = env->GetByteArrayElements(buffer, 0);
 
     BYTE *bytes = reinterpret_cast<BYTE *>(data);
 
-    PWSerialPort *serial = (PWSerialPort *) addr;
+    PWSerialPort *serial = (PWSerialPort *) serialPort;
 
     int ret = serial->serialPortWrite(bytes, len);
 
@@ -85,8 +85,8 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_write
  */
 JNIEXPORT void JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_close
-        (JNIEnv *env, jobject thiz, jlong addr) {
-    PWSerialPort *serial = (PWSerialPort *) addr;
+        (JNIEnv *env, jobject thiz, jlong serialPort) {
+    PWSerialPort *serial = (PWSerialPort *) serialPort;
     serial->serialPortClose();
     delete serial;
 }

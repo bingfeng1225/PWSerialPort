@@ -9,12 +9,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class PWSerialPort {
-    private long descriptor;
+    private long serialPort;
     private boolean released = false;
 
     private PWSerialPort(File device, int baudrate, int stopbits, int databits, int parity, int flowControl) throws IOException {
-        this.descriptor = this.open(device.getAbsolutePath(), baudrate, stopbits, databits, parity, flowControl);
-        if (this.descriptor == 0) {
+        this.serialPort = this.open(device.getAbsolutePath(), baudrate, stopbits, databits, parity, flowControl);
+        if (this.serialPort == 0) {
             throw new IOException();
         }
     }
@@ -26,7 +26,7 @@ public class PWSerialPort {
         if (data == null) {
             throw new IOException("Serial port read buffer can not be null");
         }
-        int length = this.read(this.descriptor, data, len);
+        int length = this.read(this.serialPort, data, len);
         if(length == -1){
             throw new IOException("Serial port read error");
         }
@@ -40,18 +40,18 @@ public class PWSerialPort {
         if (data == null) {
             throw new IOException("Serial port write buffer can not be null");
         }
-        int length = this.write(this.descriptor, data, len);
-        if(length == -1){
-            throw new IOException("Serial port write error");
+        int length = this.write(this.serialPort, data, len);
+        if(length == -1 || length != len){
+            throw new IOException("Serial port write error(" + length + ")");
         }
         return length;
     }
 
     public void release() {
         this.released = true;
-        if (this.descriptor != 0) {
-            this.close(this.descriptor);
-            this.descriptor = 0;
+        if (this.serialPort != 0) {
+            this.close(this.serialPort);
+            this.serialPort = 0;
         }
     }
 
@@ -59,11 +59,11 @@ public class PWSerialPort {
 
     private native long open(String path, int baudrate, int stopbits, int databits, int parity, int flowControl); //打开串口
 
-    private native int read(long descriptor, byte[] buffer, int len);
+    private native int read(long serialPort, byte[] buffer, int len);
 
-    private native int write(long descriptor, byte[] buffer, int len);
+    private native int write(long serialPort, byte[] buffer, int len);
 
-    private native void close(long descriptor); //关闭串口
+    private native void close(long serialPort); //关闭串口
 
     static {
         System.loadLibrary("pw_serial_port"); // 载入底层C文件 so库链接文件
@@ -99,7 +99,6 @@ public class PWSerialPort {
         public Builder() {
 
         }
-
 
         public Builder path(String path) {
             this.path = path;

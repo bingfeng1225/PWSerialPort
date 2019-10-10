@@ -57,15 +57,15 @@ public:
 
     int serialPortOpen();
 
-    void serialPortClose();
+    int serialPortConfig();
+
+    speed_t findBaudrate();
 
     int serialPortRead(BYTE *buffer, size_t len);
 
     int serialPortWrite(BYTE *buffer, size_t len);
-private:
-    int serialPortConfig();
 
-    speed_t findBaudrate();
+    void serialPortClose();
 
 private:
     int fd;

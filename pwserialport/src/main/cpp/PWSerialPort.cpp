@@ -93,49 +93,6 @@ int PWSerialPort::serialPortOpen() {
     return this->serialPortConfig();
 }
 
-void PWSerialPort::serialPortClose() {
-    if (this->fd != -1) {
-        close(this->fd);
-        this->fd = -1;
-    }
-}
-
-int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
-    /*将文件描述符加入读描述符集合*/
-    if(this->fd == -1){
-        return -1;
-    }
-    fd_set rfds;
-
-    FD_ZERO(&rfds);
-    FD_SET(this->fd, &rfds);
-
-    struct timeval time;
-    /*设置超时*/
-    time.tv_sec = 1;
-    time.tv_usec = 0;
-    /*实现串口的多路I/O*/
-    int ret = select(this->fd + 1, &rfds, NULL, NULL, &time);
-    if (ret == 0) { //超时
-        return ret;
-    } else if (ret == -1) { //失败
-        return ret;
-    }
-    return static_cast<int>(read(this->fd, buffer, len));
-}
-
-int PWSerialPort::serialPortWrite(BYTE *buffer, size_t len) {
-    if(this->fd == -1){
-        return -1;
-    }
-    size_t ret = write(this->fd, buffer, len);
-    if(ret == -1){
-        return -1;
-    }
-    fsync(this->fd);
-    return static_cast<int>(ret);
-}
-
 speed_t PWSerialPort::findBaudrate() {
     switch (this->baudrate) {
         case 0:
@@ -316,3 +273,50 @@ int PWSerialPort::serialPortConfig() {
     }
     return 0;
 }
+
+int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
+    /*将文件描述符加入读描述符集合*/
+    if (this->fd == -1) {
+        return -1;
+    }
+    fd_set rfds;
+
+    FD_ZERO(&rfds);
+    FD_SET(this->fd, &rfds);
+
+    struct timeval time;
+    /*设置超时*/
+    time.tv_sec = 2;
+    time.tv_usec = 0;
+    /*实现串口的多路I/O*/
+    int ret = select(this->fd + 1, &rfds, NULL, NULL, &time);
+    if (ret == 0) { //超时
+        return ret;
+    } else if (ret == -1) { //失败
+        return ret;
+    }
+    return static_cast<int>(read(this->fd, buffer, len));
+}
+
+int PWSerialPort::serialPortWrite(BYTE *buffer, size_t len) {
+    if (this->fd == -1) {
+        return -1;
+    }
+    size_t ret = write(this->fd, buffer, len);
+    if (ret == -1) {
+        return -1;
+    }
+    fsync(this->fd);
+    return static_cast<int>(ret);
+}
+
+void PWSerialPort::serialPortClose() {
+    if (this->fd != -1) {
+        close(this->fd);
+        this->fd = -1;
+    }
+}
+
+
+
+

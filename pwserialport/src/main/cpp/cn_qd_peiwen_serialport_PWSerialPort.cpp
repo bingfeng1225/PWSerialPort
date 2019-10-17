@@ -36,8 +36,7 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_open
     env->ReleaseStringUTFChars(path, path_utf);
     if (serial->serialPortOpen() == -1) {
         delete serial;
-        serial = NULL;
-        return 0;
+        return -1;
     }
     return (jlong) serial;
 }
@@ -102,17 +101,17 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile
     jboolean iscopy;
     const char *path_utf = env->GetStringUTFChars(path, &iscopy);
     int fd = open(path_utf, O_CREAT | O_RDWR);
-    env->ReleaseStringUTFChars(path, path_utf);
     if (fd == -1) {
-        LOGE("Cannot open file %d", errno);
+        LOGE("Cannot open file (%s) %d", path_utf, errno);
         return;
     }
     const char *content_utf = env->GetStringUTFChars(content, &iscopy);
     int len = write(fd, content_utf, strlen(content_utf));
     env->ReleaseStringUTFChars(content, content_utf);
     if (len == -1) {
-        LOGE("Cannot write file %d", errno);
+        LOGE("Cannot write file (%s) %d", path_utf, errno);
     }
+    env->ReleaseStringUTFChars(path, path_utf);
     close(fd);
 }
 

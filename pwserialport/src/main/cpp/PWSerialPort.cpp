@@ -15,7 +15,7 @@ PWSerialPort::PWSerialPort() {
 }
 
 PWSerialPort::~PWSerialPort() {
-    LOGE("~PWSerialPort");
+
 }
 
 int PWSerialPort::getFd() const {
@@ -82,7 +82,7 @@ int PWSerialPort::serialPortOpen() {
     /*打开串口*/
     this->fd = open(this->filePath.data(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (this->fd == -1) {
-        LOGE("Open serial port failed!");
+        LOGE("Open serial port file failed!");
         return -1;
     }
     /*清除串口非阻塞标志*/
@@ -286,7 +286,7 @@ int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
 
     struct timeval time;
     /*设置超时*/
-    time.tv_sec = 2;
+    time.tv_sec = 1;
     time.tv_usec = 0;
     /*实现串口的多路I/O*/
     int ret = select(this->fd + 1, &rfds, NULL, NULL, &time);

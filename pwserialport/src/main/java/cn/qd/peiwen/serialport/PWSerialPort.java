@@ -8,14 +8,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import cn.qd.peiwen.logger.PWLogger;
+import cn.qd.peiwen.pwtools.EmptyUtils;
+
 public class PWSerialPort {
     private long serialPort;
     private boolean released = false;
 
     private PWSerialPort(File device, int baudrate, int stopbits, int databits, int parity, int flowControl) throws IOException {
         this.serialPort = this.open(device.getAbsolutePath(), baudrate, stopbits, databits, parity, flowControl);
-        if (this.serialPort == 0) {
-            throw new IOException();
+        if (this.serialPort < 0) {
+            throw new IOException("Serial port open failed");
         }
     }
 
@@ -23,11 +26,11 @@ public class PWSerialPort {
         if (this.released) {
             throw new IOException("Serial port released");
         }
-        if (data == null) {
+        if (EmptyUtils.isEmpty(data)) {
             throw new IOException("Serial port read buffer can not be null");
         }
         int length = this.read(this.serialPort, data, len);
-        if(length == -1){
+        if (length == -1) {
             throw new IOException("Serial port read error");
         }
         return length;
@@ -37,11 +40,11 @@ public class PWSerialPort {
         if (this.released) {
             throw new IOException("Serial port released");
         }
-        if (data == null) {
+        if (EmptyUtils.isEmpty(data)) {
             throw new IOException("Serial port write buffer can not be null");
         }
         int length = this.write(this.serialPort, data, len);
-        if(length == -1 || length != len){
+        if (length == -1 || length != len) {
             throw new IOException("Serial port write error(" + length + ")");
         }
         return length;
@@ -133,7 +136,7 @@ public class PWSerialPort {
         public PWSerialPort build() {
             File device = new File(path);
             if (!checkDevice(device)) {
-                Log.e("PWSerialPort", "Missing read/write permission " + path);
+                PWLogger.e("Missing read/write permission " + path);
                 return null;
             }
             try {
@@ -146,7 +149,7 @@ public class PWSerialPort {
                         this.flowControl
                 );
             } catch (Exception e) {
-                e.printStackTrace();
+                PWLogger.e(e);
                 return null;
             }
         }
@@ -168,7 +171,7 @@ public class PWSerialPort {
                 }
                 return true;
             } catch (Exception e) {
-                e.printStackTrace();
+                PWLogger.e(e);
                 return false;
             }
         }

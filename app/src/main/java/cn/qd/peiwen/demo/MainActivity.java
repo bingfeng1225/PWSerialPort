@@ -2,126 +2,130 @@ package cn.qd.peiwen.demo;
 
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 
-
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
-import cn.qd.peiwen.serialport.PWSerialPort;
+import cn.qd.peiwen.demo.finger.listener.FingerPrintListener;
+import cn.qd.peiwen.demo.finger.FingerPrintManager;
+import cn.qd.peiwen.demo.rfid.RFIDReaderManager;
+import cn.qd.peiwen.demo.rfid.listener.RFIDReaderListener;
+import cn.qd.peiwen.logger.PWLogger;
 
 
-public class MainActivity extends AppCompatActivity {
-
-    private PWSerialPort serialPort;
+public class MainActivity extends AppCompatActivity implements FingerPrintListener, RFIDReaderListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        PWLogger.configure(this);
+        RFIDReaderManager.getInstance().init(this);
+        FingerPrintManager.getInstance().init(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        RFIDReaderManager.getInstance().release();
+        FingerPrintManager.getInstance().release();
     }
 
     public void onClicked(View view) {
         switch (view.getId()) {
-            case R.id.open:
-                openSerialPort();
+            case R.id.regist:
+                FingerPrintManager.getInstance().regist();
                 break;
-            case R.id.send:
-                sendMessage();
+            case R.id.download:
+                FingerPrintManager.getInstance().download();
                 break;
-            case R.id.write:
-                writeFile("1");
+            case R.id.upload:
+                List<String> files = new ArrayList<>();
+                files.add("/sdcard/finger.1");
+                files.add("/sdcard/finger.2");
+                files.add("/sdcard/finger.3");
+                FingerPrintManager.getInstance().uplaod(files);
                 break;
-            case R.id.read:
-                writeFile("0");
+            case R.id.open_finger:
+                FingerPrintManager.getInstance().enable();
                 break;
-            case R.id.close:
-                closeSerialPort();
+            case R.id.close_finger:
+                FingerPrintManager.getInstance().disable();
+                break;
+
+            case R.id.open_rfid:
+                RFIDReaderManager.getInstance().enable();
+                break;
+            case R.id.close_rfid:
+                RFIDReaderManager.getInstance().disable();
                 break;
         }
     }
 
-    private void openSerialPort() {
-        if (this.serialPort != null) {
-            return;
-        }
-        try {
-            this.serialPort = new PWSerialPort.Builder()
-                    .path("/dev/ttyUSB0")
-                    .baudrate(115200)
-                    .build();
-            ReadThread thread = new ReadThread();
-            Log.e("SerialPort", "创建读取线程-----------------" + this);
-            thread.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void onRegistTimeout() {
+        PWLogger.e("onRegistTimeout");
     }
 
-    private class ReadThread extends Thread {
-        public ReadThread() {
-        }
-
-        @Override
-        public void run() {
-            super.run();
-            byte[] data = new byte[256];
-            while (serialPort != null) {
-                try {
-                    int len = serialPort.readBuffer(data, 256);
-                    if (len > 0) {
-                        Log.e("SerialPort", toHexString(data, 0, len));
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-            Log.e("SerialPort", "读取线程释放-----------------" + this);
-        }
+    @Override
+    public void onRegistFailured() {
+        PWLogger.e("onRegistFailured");
     }
 
-    public String toHexString(byte[] data, int offset, int len) {
-        if (data == null) {
-            return null;
-        }
-        if (offset < 0 || offset > data.length - 1) {
-            return null;
-        }
-        if (len < 0 || offset + len > data.length) {
-            return null;
-        }
-        StringBuffer buffer = new StringBuffer();
-        for (int i = offset; i < offset + len; i++) {
-            buffer.append(String.format("0x%02X ", data[i]));
-        }
-        return buffer.toString();
+    @Override
+    public void onFingerAlreadyExists() {
+        PWLogger.e("onFingerAlreadyExists");
     }
 
-    private void sendMessage() {
-        try {
-            if (null != this.serialPort) {
-                byte[] bytes = {(byte) 0xF5, (byte) 0x09, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x09, (byte) 0xF5};
-                this.serialPort.writeBuffer(bytes,bytes.length);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void onRegistSuccessed(int finger) {
+        PWLogger.e("onRegistSuccessed:" + finger);
     }
 
-    private void writeFile(String content) {
-        long start = System.currentTimeMillis();
-        PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", content);
-        Log.e("SerialPort", "写文件耗时:" + (System.currentTimeMillis() - start));
+    @Override
+    public void onUploadFailured() {
+        PWLogger.e("onUploadFailured");
     }
 
-    private void closeSerialPort() {
-        if (null != this.serialPort) {
-            this.serialPort.release();
-            this.serialPort = null;
-        }
+    @Override
+    public void onUploadSuccessed() {
+        PWLogger.e("onUploadSuccessed");
+    }
+
+    @Override
+    public void onNoFingerExist() {
+        PWLogger.e("onNoFingerExist");
+    }
+
+    @Override
+    public void onDownloadFailured() {
+        PWLogger.e("onDownloadFailured");
+    }
+
+    @Override
+    public void onDownloadSuccessed() {
+        PWLogger.e("onDownloadSuccessed");
+    }
+
+    @Override
+    public boolean isFingerValid(int finger) {
+        return true;
+    }
+
+    @Override
+    public void onFingerUNRegistered() {
+        PWLogger.e("onFingerUNRegistered");
+    }
+
+    @Override
+    public void onFingerRecognized(int finger) {
+        PWLogger.e("onFingerRecognized" + finger);
+    }
+
+    @Override
+    public void onCardRecognized(long id, String card) {
+        PWLogger.e("onCardRecognized ID：" +id + "，卡号：" + card);
     }
 }

@@ -131,9 +131,14 @@ public class PWSerialPortHelper {
         }
     }
 
-    public void send(byte[] bytes) {
-        if (isOpened()) {
-            this.phandler.obtainMessage(0, bytes).sendToTarget();
+    public void write(byte[] bytes) {
+        try {
+            if (EmptyUtils.isNotEmpty(this.serialPort)) {
+                this.serialPort.writeBuffer(bytes, bytes.length);
+            }
+        } catch (IOException e) {
+            PWLogger.d(e);
+            this.onException();
         }
     }
 
@@ -183,17 +188,6 @@ public class PWSerialPortHelper {
             this.fireConnected();
             this.createReadThread();
         } else {
-            this.onException();
-        }
-    }
-
-    private void onSend(byte[] bytes) {
-        try {
-            if (EmptyUtils.isNotEmpty(this.serialPort)) {
-                this.serialPort.writeBuffer(bytes, bytes.length);
-            }
-        } catch (IOException e) {
-            PWLogger.d(e);
             this.onException();
         }
     }
@@ -303,29 +297,24 @@ public class PWSerialPortHelper {
             super.handleMessage(msg);
             switch (msg.what) {
                 case PW_SERIAL_PORT_STATE_IDLE:
-                    PWLogger.d("PW_SERIAL_PORT_STATE_IDLE");
+                    PWLogger.d("PW_SERIAL_PORT_STATE_IDLE(" + name + ")");
                     break;
                 case PW_SERIAL_PORT_STATE_OPENED:
                     if (!isClosed() && !isReleased()) {
-                        PWLogger.d("PW_SERIAL_PORT_STATE_OPENED");
+                        PWLogger.d("PW_SERIAL_PORT_STATE_OPENED(" + name + ")");
                         PWSerialPortHelper.this.onOpen();
                     }
                     break;
                 case PW_SERIAL_PORT_STATE_CLOSED:
-                    PWLogger.d("PW_SERIAL_PORT_STATE_CLOSED");
+                    PWLogger.d("PW_SERIAL_PORT_STATE_CLOSED(" + name + ")");
                     PWSerialPortHelper.this.onClose();
                     break;
                 case PW_SERIAL_PORT_STATE_RELEASED:
-                    PWLogger.d("PW_SERIAL_PORT_STATE_RELEASED");
+                    PWLogger.d("PW_SERIAL_PORT_STATE_RELEASED(" + name + ")");
                     PWSerialPortHelper.this.onRelease();
                     break;
-                default: {
-                    if (isOpened()) {
-                        byte[] bytes = (byte[]) msg.obj;
-                        PWSerialPortHelper.this.onSend(bytes);
-                    }
+                default:
                     break;
-                }
             }
         }
     }
@@ -355,9 +344,9 @@ public class PWSerialPortHelper {
                         System.arraycopy(buffer, 0, data, 0, length);
                         PWSerialPortHelper.this.fireByteReceived(data);
                     } else {
-                        if(timeout <= 0){
+                        if (timeout <= 0) {
                             times = 0;
-                        }else{
+                        } else {
                             times++;
                             if (times >= timeout) {
                                 throw new IOException("PWSerialPort(" + name + ") read timeout");

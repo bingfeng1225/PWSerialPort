@@ -153,7 +153,7 @@ public class FingerPrintManager implements PWSerialPortListener {
 
     private void sendCommand(byte[] data) {
         if (this.isReady()) {
-            this.helper.send(data);
+            this.helper.write(data);
         }
     }
 

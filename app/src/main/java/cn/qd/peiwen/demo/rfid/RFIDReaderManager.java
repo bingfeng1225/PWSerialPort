@@ -120,7 +120,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
         if (this.isReady()) {
             byte[] data = RFIDReaderTools.createFingerCommand(type);
             PWLogger.d("指令发送：" + ByteUtils.bytes2HexString(data));
-            this.helper.send(data);
+            this.helper.write(data);
         }
     }
 

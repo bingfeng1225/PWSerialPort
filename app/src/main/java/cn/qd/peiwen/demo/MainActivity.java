@@ -13,16 +13,63 @@ import cn.qd.peiwen.demo.finger.FingerPrintManager;
 import cn.qd.peiwen.demo.rfid.RFIDReaderManager;
 import cn.qd.peiwen.demo.rfid.listener.RFIDReaderListener;
 import cn.qd.peiwen.logger.PWLogger;
+import cn.qd.peiwen.pwtools.ByteUtils;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 
 public class MainActivity extends AppCompatActivity implements FingerPrintListener, RFIDReaderListener {
 
+    private ByteBuf buffer = Unpooled.buffer(4);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.buffer = Unpooled.buffer(4);
+        byte[] bytes = new byte[]{0x00,0x00,0x00,0x01,0x10};
+        this.buffer.writeBytes(bytes,0,bytes.length);
+        PWLogger.d("SRC:" + ByteUtils.bytes2HexString(bytes));
+        byte[] data = new byte[]{0x01, 0x10};
+        int index = indexOf(this.buffer,data);
+        this.buffer.skipBytes(index);
+        this.buffer.discardReadBytes();
+        data = new byte[this.buffer.readableBytes()];
+        this.buffer.readBytes(data,0,data.length);
+        PWLogger.d("DEST:" + ByteUtils.bytes2HexString(data));
+
         RFIDReaderManager.getInstance().init(this);
         FingerPrintManager.getInstance().init(this);
+    }
+    private static int indexOf(ByteBuf haystack, byte[] needle) {
+        //遍历haystack的每一个字节
+        for (int i = haystack.readerIndex(); i < haystack.writerIndex(); i++) {
+            int needleIndex;
+            int haystackIndex = i;
+            /*haystack是否出现了delimiter，注意delimiter是一个ChannelBuffer（byte[]）
+            例如对于haystack="ABC\r\nDEF"，needle="\r\n"
+            那么当haystackIndex=3时，找到了“\r”，此时needleIndex=0
+            继续执行循环，haystackIndex++，needleIndex++，
+            找到了“\n”
+            至此，整个needle都匹配到了
+            程序然后执行到if (needleIndex == needle.capacity())，返回结果
+            */
+            for (needleIndex = 0; needleIndex < needle.length; needleIndex++) {
+                if (haystack.getByte(haystackIndex) != needle[needleIndex]) {
+                    break;
+                } else {
+                    haystackIndex++;
+                    if (haystackIndex == haystack.writerIndex() && needleIndex != needle.length - 1) {
+                        return -1;
+                    }
+                }
+            }
+
+            if (needleIndex == needle.length) {
+                // Found the needle from the haystack!
+                return i - haystack.readerIndex();
+            }
+        }
+        return -1;
     }
 
     @Override

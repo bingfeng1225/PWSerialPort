@@ -14,8 +14,18 @@ android {
         }
     }
     buildTypes {
+        debug {
+            minifyEnabled false
+            buildConfigField "String", "PW_LOG_LEVEL", "\"ALL\""
+            buildConfigField "boolean", "PW_LOG_FILE", "true"
+            buildConfigField "boolean", "PW_LOG_LOGCAT", "true"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled false
+            buildConfigField "String", "PW_LOG_LEVEL", "\"ERROR\""
+            buildConfigField "boolean", "PW_LOG_FILE", "true"
+            buildConfigField "boolean", "PW_LOG_LOGCAT", "false"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -30,5 +40,6 @@ dependencies {
     implementation 'com.github.bingfeng1225:PWTools:1.0.6'
     implementation 'com.github.bingfeng1225:PWLogger:1.0.3'
     implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation group: 'log4j', name: 'log4j', version: '1.2.17'
     implementation group: 'io.netty', name: 'netty-buffer', version: '4.1.42.Final'
 }

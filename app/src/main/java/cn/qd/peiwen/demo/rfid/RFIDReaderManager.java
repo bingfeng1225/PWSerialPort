@@ -61,19 +61,19 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
-    public boolean isReady() {
-        if(EmptyUtils.isEmpty(this.handler)){
+    public void release() {
+        this.destoryHelper();
+        this.destoryBuffer();
+    }
+
+    private boolean isReady() {
+        if(EmptyUtils.isEmpty(this.helper)){
             return false;
         }
         if(EmptyUtils.isEmpty(this.buffer)){
             return false;
         }
         return true;
-    }
-
-    public void release() {
-        this.destoryHelper();
-        this.destoryBuffer();
     }
 
     private void createHelper() {

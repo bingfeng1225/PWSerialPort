@@ -355,9 +355,13 @@ public class PWSerialPortHelper {
                         System.arraycopy(buffer, 0, data, 0, length);
                         PWSerialPortHelper.this.fireByteReceived(data);
                     } else {
-                        times = (timeout <= 0) ? 0 : (times + 1);
-                        if (times >= timeout) {
-                            throw new IOException("PWSerialPort(" + name + ") read timeout");
+                        if(timeout <= 0){
+                            times = 0;
+                        }else{
+                            times++;
+                            if (times >= timeout) {
+                                throw new IOException("PWSerialPort(" + name + ") read timeout");
+                            }
                         }
                     }
                 }

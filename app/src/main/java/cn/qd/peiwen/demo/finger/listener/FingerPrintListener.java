@@ -1,15 +1,19 @@
 package cn.qd.peiwen.demo.finger.listener;
 
 public interface FingerPrintListener {
+    void onRegistStated();
     void onRegistTimeout();
     void onRegistFailured();
     void onFingerAlreadyExists();
+    void onRegistStepChanged(int step);
     void onRegistSuccessed(int finger);
 
+    void onUploadStated();
     void onUploadFailured();
     void onUploadSuccessed();
 
     void onNoFingerExist();
+    void onDownloadStated();
     void onDownloadFailured();
     void onDownloadSuccessed();
 
@@ -17,4 +21,7 @@ public interface FingerPrintListener {
 
     void onFingerUNRegistered();
     void onFingerRecognized(int finger);
+
+    void onFingerPrintReady();
+    void onFingerPrintException();
 }

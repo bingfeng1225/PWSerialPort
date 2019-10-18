@@ -124,9 +124,21 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
-    private void fireCardRecognized(long id, String card) {
+    private void fireRFIDReaderReady(){
         if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onCardRecognized(id, card);
+            this.listener.get().onRFIDReaderReady();
+        }
+    }
+
+    private void fireRFIDReaderException(){
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onRFIDReaderException();
+        }
+    }
+
+    private void fireRFIDReaderRecognized(long id, String card){
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onRFIDReaderRecognized(id, card);
         }
     }
 
@@ -146,6 +158,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
         if (!checkHelper(helper)) {
             return;
         }
+        this.fireRFIDReaderException();
         if (this.enabled) {
             RFIDReaderTools.resetRFIDReader();
         }
@@ -164,6 +177,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
                 this.buffer.resetReaderIndex();
             } else {
                 this.uart = true;
+                this.fireRFIDReaderReady();
                 this.buffer.discardReadBytes();
                 this.handler.sendEmptyMessageDelayed(1, 1000);
             }
@@ -242,7 +256,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
 
         long id = ByteUtils.bytes2Long(data, ByteOrder.LITTLE_ENDIAN);
         String card = ByteUtils.bytes2HexString(data, 0, length);
-        this.fireCardRecognized(id, card);
+        this.fireRFIDReaderRecognized(id, card);
 
         this.buffer.skipBytes(2);
         this.buffer.discardReadBytes();

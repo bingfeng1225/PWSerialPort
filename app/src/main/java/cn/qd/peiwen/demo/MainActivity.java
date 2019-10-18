@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
                 FingerPrintManager.getInstance().regist();
                 break;
             case R.id.download:
-                FingerPrintManager.getInstance().download();
+                FingerPrintManager.getInstance().download("/sdcard");
                 break;
             case R.id.upload:
                 List<String> files = new ArrayList<>();
@@ -125,7 +125,47 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
     }
 
     @Override
-    public void onCardRecognized(long id, String card) {
+    public void onFingerPrintReady() {
+
+    }
+
+    @Override
+    public void onFingerPrintException() {
+
+    }
+
+    @Override
+    public void onRFIDReaderReady() {
+
+    }
+
+    @Override
+    public void onRFIDReaderException() {
+
+    }
+
+    @Override
+    public void onRFIDReaderRecognized(long id, String card) {
         PWLogger.e("onCardRecognized ID：" +id + "，卡号：" + card);
+    }
+
+    @Override
+    public void onRegistStated() {
+
+    }
+
+    @Override
+    public void onRegistStepChanged(int step) {
+
+    }
+
+    @Override
+    public void onUploadStated() {
+
+    }
+
+    @Override
+    public void onDownloadStated() {
+
     }
 }

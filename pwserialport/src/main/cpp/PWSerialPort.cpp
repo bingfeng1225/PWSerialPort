@@ -306,6 +306,7 @@ int PWSerialPort::serialPortWrite(BYTE *buffer, size_t len) {
     if (ret == -1) {
         return -1;
     }
+    fdatasync(this->fd);
     fsync(this->fd);
     return static_cast<int>(ret);
 }

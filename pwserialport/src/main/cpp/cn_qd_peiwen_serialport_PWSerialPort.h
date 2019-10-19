@@ -14,20 +14,23 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_open
         (JNIEnv *, jobject, jstring, jint, jint, jint, jint, jint);
+
 /*
  * Class:     PWSerialPort
- * Method:    read
+ * Method:    select
  */
 JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_PWSerialPort_read
-        (JNIEnv *, jobject, jlong, jbyteArray, jint);
+Java_cn_qd_peiwen_serialport_PWSerialPort_select
+        (JNIEnv *, jobject, jlong);
+
 /*
  * Class:     PWSerialPort
- * Method:    read
+ * Method:    descriptor
  */
-JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_PWSerialPort_write
-        (JNIEnv *, jobject, jlong, jbyteArray, jint);
+JNIEXPORT jobject JNICALL
+Java_cn_qd_peiwen_serialport_PWSerialPort_descriptor
+        (JNIEnv *, jobject, jlong);
+
 /*
  * Class:     PWSerialPort
  * Method:    close
@@ -35,9 +38,11 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_write
 JNIEXPORT void JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_close
         (JNIEnv *, jobject, jlong);
+
 /*
  * Class:     PWSerialPort
  * Method:    writeFile
+ * static
  */
 JNIEXPORT void JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile

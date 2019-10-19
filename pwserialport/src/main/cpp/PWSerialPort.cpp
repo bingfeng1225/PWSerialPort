@@ -274,7 +274,7 @@ int PWSerialPort::serialPortConfig() {
     return 0;
 }
 
-int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
+int PWSerialPort::serialPortSelect() {
     /*将文件描述符加入读描述符集合*/
     if (this->fd == -1) {
         return -1;
@@ -289,7 +289,11 @@ int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
     time.tv_sec = 1;
     time.tv_usec = 0;
     /*实现串口的多路I/O*/
-    int ret = select(this->fd + 1, &rfds, NULL, NULL, &time);
+    return select(this->fd + 1, &rfds, NULL, NULL, &time);
+}
+
+int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
+    int ret = this->serialPortSelect();
     if (ret == 0) { //超时
         return ret;
     } else if (ret == -1) { //失败

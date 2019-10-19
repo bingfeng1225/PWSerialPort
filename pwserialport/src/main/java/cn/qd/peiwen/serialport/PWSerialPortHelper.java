@@ -133,8 +133,10 @@ public class PWSerialPortHelper {
 
     public void write(byte[] bytes) {
         try {
-            if (EmptyUtils.isNotEmpty(this.serialPort)) {
-                this.serialPort.writeBuffer(bytes, bytes.length);
+            if (isWriteable()) {
+                this.serialPort.outputStream().write(bytes);
+                this.serialPort.outputStream().flush();
+                this.serialPort.outputStream().getFD().sync();
             }
         } catch (IOException e) {
             PWLogger.d(e);
@@ -177,6 +179,22 @@ public class PWSerialPortHelper {
 
     private boolean isReleased() {
         if (this.state == PW_SERIAL_PORT_STATE_RELEASED) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isReadable() {
+        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) &&
+                EmptyUtils.isNotEmpty(this.serialPort.inputStream())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isWriteable() {
+        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) &&
+                EmptyUtils.isNotEmpty(this.serialPort.outputStream())) {
             return true;
         }
         return false;
@@ -336,23 +354,23 @@ public class PWSerialPortHelper {
             try {
                 int times = 0;
                 byte[] buffer = new byte[128];
-                while (!finished) {
-                    int length = serialPort.readBuffer(buffer, 128);
-                    if (length > 0) {
-                        times = 0;
-                        byte[] data = new byte[length];
-                        System.arraycopy(buffer, 0, data, 0, length);
-                        PWSerialPortHelper.this.fireByteReceived(data);
-                    } else {
-                        if (timeout <= 0) {
-                            times = 0;
-                        } else {
-                            times++;
-                            if (times >= timeout) {
-                                throw new IOException("PWSerialPort(" + name + ") read timeout");
-                            }
+                while (!finished && isReadable()) {
+                    int ret = serialPort.select();
+                    if (ret == 0) {
+                        times++;
+                        if (times >= timeout) {
+                            throw new IOException("PWSerialPort(" + name + ") read timeout");
                         }
+                        continue;
                     }
+                    times = 0;
+                    if (!isReadable()) {
+                        break;
+                    }
+                    int length = serialPort.inputStream().read(buffer);
+                    byte[] data = new byte[length];
+                    System.arraycopy(buffer, 0, data, 0, length);
+                    PWSerialPortHelper.this.fireByteReceived(data);
                 }
             } catch (Exception e) {
                 PWLogger.d(e);

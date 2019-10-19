@@ -19,7 +19,6 @@
 /*
  * Class:     PWSerialPort
  * Method:    open
- * Signature: (Ljava/lang/String;II)Ljava/io/FileDescriptor;
  */
 JNIEXPORT jlong JNICALL
 Java_cn_qd_peiwen_serialport_PWSerialPort_open
@@ -43,40 +42,32 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_open
 
 /*
  * Class:     PWSerialPort
- * Method:    read
+ * Method:    select
  */
 JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_PWSerialPort_read
-        (JNIEnv *env, jobject thiz, jlong serialPort, jbyteArray buffer, jint len) {
-    BYTE data[len];
+Java_cn_qd_peiwen_serialport_PWSerialPort_select
+        (JNIEnv *env, jobject thiz, jlong serialPort) {
     PWSerialPort *serial = (PWSerialPort *) serialPort;
-    int ret = serial->serialPortRead(data, len);
-    if (ret > 0) {
-        jbyte *bytes = reinterpret_cast<jbyte *>(data);
-        env->SetByteArrayRegion(buffer, 0, ret, bytes);
-    }
-    return ret;
+    return serial->serialPortSelect();
 }
+
 /*
  * Class:     PWSerialPort
- * Method:    write
+ * Method:    descriptor
  */
-JNIEXPORT jint JNICALL
-Java_cn_qd_peiwen_serialport_PWSerialPort_write
-        (JNIEnv *env, jobject thiz, jlong serialPort, jbyteArray buffer, jint len) {
-
-    jbyte *data = env->GetByteArrayElements(buffer, 0);
-
-    BYTE *bytes = reinterpret_cast<BYTE *>(data);
-
+JNIEXPORT jobject JNICALL
+Java_cn_qd_peiwen_serialport_PWSerialPort_descriptor
+        (JNIEnv *env, jobject thiz, jlong serialPort) {
     PWSerialPort *serial = (PWSerialPort *) serialPort;
-
-    int ret = serial->serialPortWrite(bytes, len);
-
-    env->ReleaseByteArrayElements(buffer, data, 0);
-
-    return ret;
+    jclass cFileDescriptor = env->FindClass("java/io/FileDescriptor");
+    jmethodID iFileDescriptor = env->GetMethodID(cFileDescriptor, "<init>", "()V");
+    jfieldID descriptorID = env->GetFieldID(cFileDescriptor, "descriptor", "I");
+    jobject fileDescriptor = env->NewObject(cFileDescriptor, iFileDescriptor);
+    env->SetIntField(fileDescriptor, descriptorID, (jint) serial->getFd());
+    return fileDescriptor;
 }
+
+
 
 /*
  * Class:     PWSerialPort
@@ -114,4 +105,3 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile
     env->ReleaseStringUTFChars(path, path_utf);
     close(fd);
 }
-

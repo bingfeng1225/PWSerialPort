@@ -61,6 +61,8 @@ public:
 
     speed_t findBaudrate();
 
+    int serialPortSelect();
+
     int serialPortRead(BYTE *buffer, size_t len);
 
     int serialPortWrite(BYTE *buffer, size_t len);

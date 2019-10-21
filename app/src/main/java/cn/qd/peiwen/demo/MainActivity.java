@@ -2,43 +2,36 @@ package cn.qd.peiwen.demo;
 
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+
+import org.apache.log4j.chainsaw.Main;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
-import cn.qd.peiwen.demo.finger.listener.FingerPrintListener;
-import cn.qd.peiwen.demo.finger.FingerPrintManager;
-import cn.qd.peiwen.demo.rfid.RFIDReaderManager;
-import cn.qd.peiwen.demo.rfid.listener.RFIDReaderListener;
+import cn.qd.peiwen.demo.serialport.finger.FingerPrintManager;
+import cn.qd.peiwen.demo.serialport.finger.listener.FingerPrintListener;
+import cn.qd.peiwen.demo.serialport.mainboard.MainBoardManager;
+import cn.qd.peiwen.demo.serialport.mainboard.listener.MainBoardListener;
+import cn.qd.peiwen.demo.serialport.mainboard.tools.MainBoardTools;
+import cn.qd.peiwen.demo.serialport.rfid.RFIDReaderManager;
+import cn.qd.peiwen.demo.serialport.rfid.listener.RFIDReaderListener;
 import cn.qd.peiwen.logger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 
-public class MainActivity extends AppCompatActivity implements FingerPrintListener, RFIDReaderListener {
-
-    private ByteBuf buffer = Unpooled.buffer(4);
+public class MainActivity extends AppCompatActivity implements FingerPrintListener, RFIDReaderListener, MainBoardListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        this.buffer = Unpooled.buffer(4);
-        byte[] bytes = new byte[]{0x00,0x00,0x00,0x01,0x10};
-        this.buffer.writeBytes(bytes,0,bytes.length);
-        PWLogger.d("SRC:" + ByteUtils.bytes2HexString(bytes));
-        byte[] data = new byte[]{0x01, 0x10};
-        int index = indexOf(this.buffer,data);
-        this.buffer.skipBytes(index);
-        this.buffer.discardReadBytes();
-        data = new byte[this.buffer.readableBytes()];
-        this.buffer.readBytes(data,0,data.length);
-        PWLogger.d("DEST:" + ByteUtils.bytes2HexString(data));
-
         RFIDReaderManager.getInstance().init(this);
         FingerPrintManager.getInstance().init(this);
+        MainBoardManager.getInstance().init(this);
     }
     private static int indexOf(ByteBuf haystack, byte[] needle) {
         //遍历haystack的每一个字节
@@ -213,5 +206,35 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
     @Override
     public void onDownloadStated() {
 
+    }
+
+    @Override
+    public void onMainBoardReady() {
+
+    }
+
+    @Override
+    public void onMainBoardException() {
+
+    }
+
+    @Override
+    public void onSystemTypeChanged(int type) {
+
+    }
+
+    @Override
+    public void onStateDataReceived(byte[] data) {
+
+    }
+
+    @Override
+    public byte[] requestStateReply(byte[] data) {
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] requestCommandReply(int type) {
+        return new byte[0];
     }
 }

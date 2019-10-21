@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.finger.types;
+package cn.qd.peiwen.demo.serialport.finger.types;
 
 public enum FingerPrintState {
     FINGER_STATE_REGIST,

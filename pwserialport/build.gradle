@@ -29,6 +29,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.github.bingfeng1225:PWTools:1.0.6'
+    implementation 'com.github.bingfeng1225:PWTools:1.0.7'
     implementation 'com.github.bingfeng1225:PWLogger:1.0.3'
 }

@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.rfid.listener;
+package cn.qd.peiwen.demo.serialport.rfid.listener;
 
 public interface RFIDReaderListener {
     void onRFIDReaderReady();

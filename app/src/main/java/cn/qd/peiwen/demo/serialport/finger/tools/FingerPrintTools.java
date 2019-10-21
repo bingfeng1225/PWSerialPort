@@ -1,6 +1,6 @@
-package cn.qd.peiwen.demo.finger.tools;
+package cn.qd.peiwen.demo.serialport.finger.tools;
 
-import cn.qd.peiwen.demo.finger.types.FingerPrintCommond;
+import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintCommond;
 import cn.qd.peiwen.logger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.ThreadUtils;
@@ -39,7 +39,7 @@ public class FingerPrintTools {
     }
 
     public static byte[] createFingerCommand(FingerPrintCommond type, int param) {
-        ByteBuf buffer = Unpooled.directBuffer(8);
+        ByteBuf buffer = Unpooled.buffer(8);
         buffer.writeByte(0xF5);
         buffer.writeByte(type.value);
         switch (type) {

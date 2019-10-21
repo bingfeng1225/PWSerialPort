@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.rfid.types;
+package cn.qd.peiwen.demo.serialport.rfid.types;
 
 public enum RFIDReaderCommond {
     RFID_COMMAND_UART,

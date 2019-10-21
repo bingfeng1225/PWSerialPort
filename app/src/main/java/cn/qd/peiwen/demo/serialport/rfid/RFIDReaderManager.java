@@ -1,15 +1,17 @@
-package cn.qd.peiwen.demo.rfid;
+package cn.qd.peiwen.demo.serialport.rfid;
 
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Message;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteOrder;
 
-import cn.qd.peiwen.demo.rfid.listener.RFIDReaderListener;
-import cn.qd.peiwen.demo.rfid.tools.RFIDReaderTools;
-import cn.qd.peiwen.demo.rfid.types.RFIDReaderCommond;
+import cn.qd.peiwen.demo.serialport.rfid.listener.RFIDReaderListener;
+import cn.qd.peiwen.demo.serialport.rfid.tools.RFIDReaderTools;
+import cn.qd.peiwen.demo.serialport.rfid.types.RFIDReaderCommond;
 import cn.qd.peiwen.logger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -19,13 +21,17 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class RFIDReaderManager implements PWSerialPortListener {
-    private int times = 0;
     private ByteBuf buffer;
+    private RFIDHandler handler;
+    private HandlerThread thread;
+    private PWSerialPortHelper helper;
+
+    private int times = 0;
     private boolean uart = false;
     private boolean enabled = false;
-    private PWSerialPortHelper helper;
-    private static RFIDReaderManager manager;
     private WeakReference<RFIDReaderListener> listener;
+
+    private static RFIDReaderManager manager;
 
     public static RFIDReaderManager getInstance() {
         if (manager == null) {
@@ -42,6 +48,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
     }
 
     public void init(RFIDReaderListener listener) {
+        this.createHandler();
         this.createHelper();
         this.createBuffer();
         this.listener = new WeakReference<>(listener);
@@ -62,11 +69,15 @@ public class RFIDReaderManager implements PWSerialPortListener {
     }
 
     public void release() {
+        this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();
     }
 
     private boolean isReady() {
+        if(EmptyUtils.isEmpty(this.handler)){
+            return false;
+        }
         if(EmptyUtils.isEmpty(this.helper)){
             return false;
         }
@@ -97,9 +108,25 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
+    private void createHandler() {
+        if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
+            this.thread = new HandlerThread("RFIDReader");
+            this.thread.start();
+            this.handler = new RFIDHandler(this.thread.getLooper());
+        }
+    }
+
+    private void destoryHandler() {
+        if (EmptyUtils.isNotEmpty(this.thread)) {
+            this.thread.quitSafely();
+            this.thread = null;
+            this.handler = null;
+        }
+    }
+
     private void createBuffer() {
         if (null == this.buffer) {
-            this.buffer = Unpooled.directBuffer(4);
+            this.buffer = Unpooled.buffer(4);
         }
     }
 
@@ -201,24 +228,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    times++;
-                    if (times < 2) {
-                        sendEmptyMessageDelayed(0, 10);
-                    }
-                    sendCommand(RFIDReaderCommond.RFID_COMMAND_UART);
-                    break;
-                default:
-                    sendCommand(RFIDReaderCommond.RFID_COMMAND_READ);
-                    break;
-            }
-        }
-    };
+
 
 
     private void parseRFIDPackage() {
@@ -262,5 +272,27 @@ public class RFIDReaderManager implements PWSerialPortListener {
         this.buffer.discardReadBytes();
     }
 
+    private class RFIDHandler extends Handler {
+        public RFIDHandler(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0:
+                    times++;
+                    if (times < 2) {
+                        sendEmptyMessageDelayed(0, 10);
+                    }
+                    sendCommand(RFIDReaderCommond.RFID_COMMAND_UART);
+                    break;
+                default:
+                    sendCommand(RFIDReaderCommond.RFID_COMMAND_READ);
+                    break;
+            }
+        }
+    }
 }
 

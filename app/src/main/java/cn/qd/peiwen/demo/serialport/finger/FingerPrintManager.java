@@ -1,6 +1,8 @@
-package cn.qd.peiwen.demo.finger;
+package cn.qd.peiwen.demo.serialport.finger;
 
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Message;
 
 import java.io.File;
@@ -11,10 +13,10 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.qd.peiwen.demo.finger.listener.FingerPrintListener;
-import cn.qd.peiwen.demo.finger.tools.FingerPrintTools;
-import cn.qd.peiwen.demo.finger.types.FingerPrintCommond;
-import cn.qd.peiwen.demo.finger.types.FingerPrintState;
+import cn.qd.peiwen.demo.serialport.finger.listener.FingerPrintListener;
+import cn.qd.peiwen.demo.serialport.finger.tools.FingerPrintTools;
+import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintCommond;
+import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintState;
 import cn.qd.peiwen.logger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -27,16 +29,21 @@ import io.netty.buffer.Unpooled;
 
 public class FingerPrintManager implements PWSerialPortListener {
     private ByteBuf buffer;
-    private FingerPrintState state;
-    private boolean ready = false;
-    private boolean enabled = false;
+    private HandlerThread thread;
+    private FingerHandler handler;
     private PWSerialPortHelper helper;
+
+    private boolean ready = false;
+    private FingerPrintState state;
+    private boolean enabled = false;
+    private WeakReference<FingerPrintListener> listener;
+
     private int currentIndex = 0;
     private String filePath = null;
     private List<String> fileList = null;
     private List<Integer> fingerList = null;
+
     private static FingerPrintManager manager;
-    private WeakReference<FingerPrintListener> listener;
 
     public static FingerPrintManager getInstance() {
         if (manager == null) {
@@ -53,6 +60,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     }
 
     public void init(FingerPrintListener listener) {
+        this.createHandler();
         this.createHelper();
         this.createBuffer();
         this.listener = new WeakReference<>(listener);
@@ -96,11 +104,15 @@ public class FingerPrintManager implements PWSerialPortListener {
     }
 
     public void release() {
+        this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();
     }
 
     private boolean isReady() {
+        if (EmptyUtils.isEmpty(this.handler)) {
+            return false;
+        }
         if (EmptyUtils.isEmpty(this.helper)) {
             return false;
         }
@@ -131,9 +143,25 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
     }
 
+    private void createHandler() {
+        if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
+            this.thread = new HandlerThread("FingerPrint");
+            this.thread.start();
+            this.handler = new FingerHandler(this.thread.getLooper());
+        }
+    }
+
+    private void destoryHandler() {
+        if (EmptyUtils.isNotEmpty(this.thread)) {
+            this.thread.quitSafely();
+            this.thread = null;
+            this.handler = null;
+        }
+    }
+
     private void createBuffer() {
         if (null == this.buffer) {
-            this.buffer = Unpooled.directBuffer(4);
+            this.buffer = Unpooled.buffer(4);
         }
     }
 
@@ -143,13 +171,13 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
     }
 
-
     private void destoryBuffer() {
         if (null != this.buffer) {
             this.buffer.release();
             this.buffer = null;
         }
     }
+
 
     private void sendCommand(byte[] data) {
         if (this.isReady()) {
@@ -345,7 +373,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         if (!checkHelper(helper)) {
             return;
         }
-        if(!this.ready){
+        if (!this.ready) {
             this.ready = true;
             this.fireFingerPrintReady();
         }
@@ -404,30 +432,6 @@ public class FingerPrintManager implements PWSerialPortListener {
                 break;
         }
     }
-
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 0x0c:
-                    if (state == FingerPrintState.FINGER_STATE_COMPARE) {
-                        sendCommand(FingerPrintCommond.FINGER_COMMAND_COMPARE);
-                    }
-                    break;
-                case 0x02:
-                    if (state == FingerPrintState.FINGER_STATE_REGIST) {
-                        sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_SECOND);
-                    }
-                    break;
-                case 0x03:
-                    if (state == FingerPrintState.FINGER_STATE_REGIST) {
-                        sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_THIRD);
-                    }
-                    break;
-            }
-        }
-    };
 
     private void uplaodFinger() throws IOException {
         String filePath = this.fileList.get(this.currentIndex);
@@ -687,5 +691,33 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.sendCommand(FingerPrintCommond.FINGER_COMMAND_SEARCH_FINGER);
     }
 
+
+    private class FingerHandler extends Handler {
+        public FingerHandler(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0x0c:
+                    if (state == FingerPrintState.FINGER_STATE_COMPARE) {
+                        sendCommand(FingerPrintCommond.FINGER_COMMAND_COMPARE);
+                    }
+                    break;
+                case 0x02:
+                    if (state == FingerPrintState.FINGER_STATE_REGIST) {
+                        sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_SECOND);
+                    }
+                    break;
+                case 0x03:
+                    if (state == FingerPrintState.FINGER_STATE_REGIST) {
+                        sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_THIRD);
+                    }
+                    break;
+            }
+        }
+    }
 }
 

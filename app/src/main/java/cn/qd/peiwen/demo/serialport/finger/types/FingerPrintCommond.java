@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.finger.types;
+package cn.qd.peiwen.demo.serialport.finger.types;
 
 public enum FingerPrintCommond {
     FINGER_COMMAND_NONE(0x00),

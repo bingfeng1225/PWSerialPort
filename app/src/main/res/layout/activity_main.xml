@@ -59,4 +59,20 @@
         android:layout_marginTop="20dp"
         android:onClick="onClicked"
         android:text="CLOSE RFID" />
+
+    <Button
+        android:id="@+id/open_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="OPEN MAIN BOARD" />
+
+    <Button
+        android:id="@+id/close_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="CLOSE MAIN BOARD" />
 </LinearLayout>

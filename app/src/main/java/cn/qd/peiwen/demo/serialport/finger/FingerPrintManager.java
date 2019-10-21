@@ -126,7 +126,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     }
 
     private void createHelper() {
-        if (!this.isReady()) {
+        if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("FingerPrint");
             this.helper.setTimeout(10);
             this.helper.setPath("/dev/ttyUSB0");
@@ -140,7 +140,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     }
 
     private void destoryHelper() {
-        if (this.isReady()) {
+        if (EmptyUtils.isNotEmpty(this.helper)) {
             this.helper.release();
             this.helper = null;
         }
@@ -163,24 +163,17 @@ public class FingerPrintManager implements PWSerialPortListener {
     }
 
     private void createBuffer() {
-        if (null == this.buffer) {
+        if (EmptyUtils.isEmpty(this.buffer)) {
             this.buffer = Unpooled.buffer(4);
         }
     }
 
-    private void clearBuffer() {
-        if (null != this.buffer) {
-            this.buffer.clear();
-        }
-    }
-
     private void destoryBuffer() {
-        if (null != this.buffer) {
+        if (EmptyUtils.isNotEmpty(this.buffer)) {
             this.buffer.release();
             this.buffer = null;
         }
     }
-
 
     private void sendCommand(byte[] data) {
         if (this.isReady()) {
@@ -346,7 +339,7 @@ public class FingerPrintManager implements PWSerialPortListener {
             return;
         }
         this.ready = false;
-        this.clearBuffer();
+        this.buffer.clear();
         this.changeFingerPrintState(FingerPrintState.FINGER_STATE_REGIST_MODEL);
     }
 

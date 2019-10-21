@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
         setContentView(R.layout.activity_main);
         RFIDReaderManager.getInstance().init(this);
         FingerPrintManager.getInstance().init(this);
-        MainBoardManager.getInstance().init(this);
     }
 
     @Override
@@ -41,7 +40,9 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
     public void onClicked(View view) {
         switch (view.getId()) {
             case R.id.regist:
-                FingerPrintManager.getInstance().regist();
+                if (!FingerPrintManager.getInstance().isBusy()) {
+                    FingerPrintManager.getInstance().regist();
+                }
                 break;
             case R.id.download:
                 if (!FingerPrintManager.getInstance().isBusy()) {
@@ -49,11 +50,13 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
                 }
                 break;
             case R.id.upload:
-                List<String> files = new ArrayList<>();
-                files.add("/sdcard/finger.1");
-                files.add("/sdcard/finger.2");
-                files.add("/sdcard/finger.3");
-                FingerPrintManager.getInstance().uplaod(files);
+                if (!FingerPrintManager.getInstance().isBusy()) {
+                    List<String> files = new ArrayList<>();
+                    files.add("/sdcard/finger.1");
+                    files.add("/sdcard/finger.2");
+                    files.add("/sdcard/finger.3");
+                    FingerPrintManager.getInstance().uplaod(files);
+                }
                 break;
             case R.id.open_finger:
                 FingerPrintManager.getInstance().enable();
@@ -61,12 +64,17 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
             case R.id.close_finger:
                 FingerPrintManager.getInstance().disable();
                 break;
-
             case R.id.open_rfid:
                 RFIDReaderManager.getInstance().enable();
                 break;
             case R.id.close_rfid:
                 RFIDReaderManager.getInstance().disable();
+                break;
+            case R.id.open_main:
+                MainBoardManager.getInstance().init(this);
+                break;
+            case R.id.close_main:
+                MainBoardManager.getInstance().release();
                 break;
         }
     }

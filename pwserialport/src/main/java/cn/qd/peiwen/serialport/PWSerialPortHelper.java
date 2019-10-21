@@ -338,6 +338,7 @@ public class PWSerialPortHelper {
     }
 
     private class ReadThread extends Thread {
+        private int times = 0;
         private boolean finished = false;
 
         public ReadThread() {
@@ -348,22 +349,29 @@ public class PWSerialPortHelper {
             this.finished = true;
         }
 
+        private void checkTimeout() throws IOException {
+            this.times++;
+            if (timeout == 0) {
+                this.times = 0;
+                return;
+            }
+            if (this.times >= timeout) {
+                throw new IOException("PWSerialPort(" + name + ") read timeout");
+            }
+        }
+
         @Override
         public void run() {
             super.run();
             try {
-                int times = 0;
                 byte[] buffer = new byte[128];
                 while (!finished && isReadable()) {
                     int ret = serialPort.select();
                     if (ret == 0) {
-                        times++;
-                        if (times >= timeout) {
-                            throw new IOException("PWSerialPort(" + name + ") read timeout");
-                        }
+                        this.checkTimeout();
                         continue;
                     }
-                    times = 0;
+                    this.times = 0;
                     if (!isReadable()) {
                         break;
                     }

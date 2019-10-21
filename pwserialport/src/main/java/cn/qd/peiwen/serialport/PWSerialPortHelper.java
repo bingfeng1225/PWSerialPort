@@ -383,6 +383,8 @@ public class PWSerialPortHelper {
             } catch (Exception e) {
                 PWLogger.d(e);
                 PWSerialPortHelper.this.onException();
+            } finally {
+                PWLogger.d("PWSerialPort(" + name + ") read thread released");
             }
         }
     }

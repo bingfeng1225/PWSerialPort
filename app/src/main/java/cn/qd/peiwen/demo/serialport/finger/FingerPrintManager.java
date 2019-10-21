@@ -64,6 +64,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.createHelper();
         this.createBuffer();
         this.listener = new WeakReference<>(listener);
+        this.state = FingerPrintState.FINGER_STATE_DISABLED;
     }
 
     public void enable() {
@@ -76,6 +77,7 @@ public class FingerPrintManager implements PWSerialPortListener {
 
     public void disable() {
         if (this.enabled && this.isReady()) {
+            this.state = FingerPrintState.FINGER_STATE_DISABLED;
             this.enabled = false;
             this.helper.close();
         }
@@ -104,6 +106,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     }
 
     public void release() {
+        this.state = FingerPrintState.FINGER_STATE_DISABLED;
         this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();

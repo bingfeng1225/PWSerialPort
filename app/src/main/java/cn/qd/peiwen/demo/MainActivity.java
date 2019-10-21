@@ -15,13 +15,9 @@ import cn.qd.peiwen.demo.serialport.finger.FingerPrintManager;
 import cn.qd.peiwen.demo.serialport.finger.listener.FingerPrintListener;
 import cn.qd.peiwen.demo.serialport.mainboard.MainBoardManager;
 import cn.qd.peiwen.demo.serialport.mainboard.listener.MainBoardListener;
-import cn.qd.peiwen.demo.serialport.mainboard.tools.MainBoardTools;
 import cn.qd.peiwen.demo.serialport.rfid.RFIDReaderManager;
 import cn.qd.peiwen.demo.serialport.rfid.listener.RFIDReaderListener;
 import cn.qd.peiwen.logger.PWLogger;
-import cn.qd.peiwen.pwtools.ByteUtils;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 
 public class MainActivity extends AppCompatActivity implements FingerPrintListener, RFIDReaderListener, MainBoardListener {
@@ -33,43 +29,13 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
         FingerPrintManager.getInstance().init(this);
         MainBoardManager.getInstance().init(this);
     }
-    private static int indexOf(ByteBuf haystack, byte[] needle) {
-        //遍历haystack的每一个字节
-        for (int i = haystack.readerIndex(); i < haystack.writerIndex(); i++) {
-            int needleIndex;
-            int haystackIndex = i;
-            /*haystack是否出现了delimiter，注意delimiter是一个ChannelBuffer（byte[]）
-            例如对于haystack="ABC\r\nDEF"，needle="\r\n"
-            那么当haystackIndex=3时，找到了“\r”，此时needleIndex=0
-            继续执行循环，haystackIndex++，needleIndex++，
-            找到了“\n”
-            至此，整个needle都匹配到了
-            程序然后执行到if (needleIndex == needle.capacity())，返回结果
-            */
-            for (needleIndex = 0; needleIndex < needle.length; needleIndex++) {
-                if (haystack.getByte(haystackIndex) != needle[needleIndex]) {
-                    break;
-                } else {
-                    haystackIndex++;
-                    if (haystackIndex == haystack.writerIndex() && needleIndex != needle.length - 1) {
-                        return -1;
-                    }
-                }
-            }
-
-            if (needleIndex == needle.length) {
-                // Found the needle from the haystack!
-                return i - haystack.readerIndex();
-            }
-        }
-        return -1;
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         RFIDReaderManager.getInstance().release();
         FingerPrintManager.getInstance().release();
+        MainBoardManager.getInstance().release();
     }
 
     public void onClicked(View view) {
@@ -78,7 +44,9 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
                 FingerPrintManager.getInstance().regist();
                 break;
             case R.id.download:
-                FingerPrintManager.getInstance().download("/sdcard");
+                if (!FingerPrintManager.getInstance().isBusy()) {
+                    FingerPrintManager.getInstance().download("/sdcard");
+                }
                 break;
             case R.id.upload:
                 List<String> files = new ArrayList<>();
@@ -185,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements FingerPrintListen
 
     @Override
     public void onRFIDReaderRecognized(long id, String card) {
-        PWLogger.e("onCardRecognized ID：" +id + "，卡号：" + card);
+        PWLogger.e("onCardRecognized ID：" + id + "，卡号：" + card);
     }
 
     @Override

@@ -9,8 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.EnumMap;
 
-import cn.qd.peiwen.logger.PWLogger;
 import cn.qd.peiwen.pwtools.EmptyUtils;
+import cn.qd.peiwen.pwtools.logger.PWLogger;
 
 public class PWSerialPort {
     private long serialPort;

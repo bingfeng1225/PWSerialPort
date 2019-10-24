@@ -7,7 +7,8 @@ import org.apache.log4j.Level;
 
 import java.io.File;
 
-import cn.qd.peiwen.logger.PWConfigurator;
+import cn.qd.peiwen.pwtools.logger.PWConfigurator;
+
 
 public class App extends Application {
     @Override

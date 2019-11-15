@@ -8,8 +8,8 @@ import android.os.Message;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.EmptyUtils;
-import cn.qd.peiwen.pwtools.logger.PWLogger;
 
 
 public class PWSerialPortHelper {

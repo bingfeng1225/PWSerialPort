@@ -17,7 +17,7 @@ import cn.qd.peiwen.demo.serialport.mainboard.MainBoardManager;
 import cn.qd.peiwen.demo.serialport.mainboard.listener.MainBoardListener;
 import cn.qd.peiwen.demo.serialport.rfid.RFIDReaderManager;
 import cn.qd.peiwen.demo.serialport.rfid.listener.RFIDReaderListener;
-import cn.qd.peiwen.pwtools.logger.PWLogger;
+import cn.qd.peiwen.pwlogger.PWLogger;
 
 
 public class MainActivity extends AppCompatActivity implements FingerPrintListener, RFIDReaderListener, MainBoardListener {

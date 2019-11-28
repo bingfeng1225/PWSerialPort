@@ -27,7 +27,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
     private PWSerialPortHelper helper;
 
     private int times = 0;
-    private boolean uart = false;
+    private boolean ready = false;
     private boolean enabled = false;
     private WeakReference<RFIDReaderListener> listener;
 
@@ -170,7 +170,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
             return;
         }
         this.times = 0;
-        this.uart = false;
+        this.ready = false;
         this.buffer.clear();
         this.handler.sendEmptyMessage(0);
     }
@@ -192,13 +192,13 @@ public class RFIDReaderManager implements PWSerialPortListener {
             return;
         }
         this.buffer.writeBytes(buffer, 0, buffer.length);
-        if (!this.uart) {
+        if (!this.ready) {
             this.buffer.markReaderIndex();
             byte mark = this.buffer.readByte();
             if (mark != 0x06) {
                 this.buffer.resetReaderIndex();
             } else {
-                this.uart = true;
+                this.ready = true;
                 this.fireRFIDReaderReady();
                 this.buffer.discardReadBytes();
                 this.handler.sendEmptyMessageDelayed(1, 1000);

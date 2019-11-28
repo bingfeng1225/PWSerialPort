@@ -1,6 +1,5 @@
 package cn.qd.peiwen.demo.serialport.mainboard;
 
-
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -26,7 +25,7 @@ public class MainBoardManager implements PWSerialPortListener {
     private MainBoardHandler handler;
     private PWSerialPortHelper helper;
 
-    private boolean system = false;
+    private byte system = 0x00;
     private WeakReference<MainBoardListener> listener;
 
     private static MainBoardManager manager;
@@ -77,7 +76,7 @@ public class MainBoardManager implements PWSerialPortListener {
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("MainBoard");
-            this.helper.setTimeout(0);
+            this.helper.setTimeout(5);
             this.helper.setPath("/dev/ttyS4");
             this.helper.setBaudrate(9600);
             this.helper.init(this);
@@ -135,7 +134,7 @@ public class MainBoardManager implements PWSerialPortListener {
     private void sendCommand(byte[] data) {
         if (this.isReady()) {
             this.helper.write(data);
-            PWLogger.e("指令发送:" + ByteUtils.bytes2HexString(data,true,", "));
+            PWLogger.d("指令发送:" + ByteUtils.bytes2HexString(data, true, ", "));
         }
     }
 
@@ -198,7 +197,7 @@ public class MainBoardManager implements PWSerialPortListener {
             return;
         }
         this.buffer.clear();
-        this.system = false;
+        this.system = 0x00;
         this.switchReadModel();
         this.fireMainBoardReady();
     }
@@ -242,8 +241,8 @@ public class MainBoardManager implements PWSerialPortListener {
                 continue;
             }
             this.buffer.discardReadBytes();
-            if (!this.system) {
-                this.system = true;
+            if (this.system == 0x00) {
+                this.system = system;
                 this.fireSystemTypeChanged(system);
             }
             PWLogger.d("指令接收:" + ByteUtils.bytes2HexString(data, true, ", "));
@@ -255,37 +254,49 @@ public class MainBoardManager implements PWSerialPortListener {
             } else {
                 msg.arg1 = model & 0xFF;
             }
-            this.handler.sendMessageDelayed(msg,5);
+            this.handler.sendMessageDelayed(msg, 5);
         }
     }
 
     private boolean ignorePackage() {
-        byte[] bytes = new byte[]{0x01, 0x10};
-        int index = indexOf(this.buffer, bytes);
-        if (index != -1) {
-            byte[] data = new byte[index];
-            this.buffer.readBytes(data, 0, data.length);
-            this.buffer.discardReadBytes();
-            PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
-            return true;
-        }
-        bytes = new byte[]{0x02, 0x10};
-        index = indexOf(this.buffer, bytes);
-        if (index != -1) {
-            byte[] data = new byte[index];
-            this.buffer.readBytes(data, 0, data.length);
-            this.buffer.discardReadBytes();
-            PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
-            return true;
-        }
-        bytes = new byte[]{0x04, 0x10};
-        index = indexOf(this.buffer, bytes);
-        if (index != -1) {
-            byte[] data = new byte[index];
-            this.buffer.readBytes(data, 0, data.length);
-            this.buffer.discardReadBytes();
-            PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
-            return true;
+        if (this.system == 0x00) {
+            byte[] bytes = new byte[]{0x01, 0x10};
+            int index = indexOf(this.buffer, bytes);
+            if (index != -1) {
+                byte[] data = new byte[index];
+                this.buffer.readBytes(data, 0, data.length);
+                this.buffer.discardReadBytes();
+                PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
+                return true;
+            }
+            bytes = new byte[]{0x02, 0x10};
+            index = indexOf(this.buffer, bytes);
+            if (index != -1) {
+                byte[] data = new byte[index];
+                this.buffer.readBytes(data, 0, data.length);
+                this.buffer.discardReadBytes();
+                PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
+                return true;
+            }
+            bytes = new byte[]{0x04, 0x10};
+            index = indexOf(this.buffer, bytes);
+            if (index != -1) {
+                byte[] data = new byte[index];
+                this.buffer.readBytes(data, 0, data.length);
+                this.buffer.discardReadBytes();
+                PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
+                return true;
+            }
+        } else {
+            byte[] bytes = new byte[]{this.system, 0x10};
+            int index = indexOf(this.buffer, bytes);
+            if (index != -1) {
+                byte[] data = new byte[index];
+                this.buffer.readBytes(data, 0, data.length);
+                this.buffer.discardReadBytes();
+                PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
+                return true;
+            }
         }
         return false;
     }

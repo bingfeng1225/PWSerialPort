@@ -1,6 +1,5 @@
 package cn.qd.peiwen.demo.serialport.mainboard.listener;
 
-
 public interface MainBoardListener {
     void onMainBoardReady();
     void onMainBoardException();

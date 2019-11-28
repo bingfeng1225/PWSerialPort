@@ -185,16 +185,14 @@ public class PWSerialPortHelper {
     }
 
     private boolean isReadable() {
-        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) &&
-                EmptyUtils.isNotEmpty(this.serialPort.inputStream())) {
+        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) && EmptyUtils.isNotEmpty(this.serialPort.inputStream())) {
             return true;
         }
         return false;
     }
 
     private boolean isWriteable() {
-        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) &&
-                EmptyUtils.isNotEmpty(this.serialPort.outputStream())) {
+        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) && EmptyUtils.isNotEmpty(this.serialPort.outputStream())) {
             return true;
         }
         return false;

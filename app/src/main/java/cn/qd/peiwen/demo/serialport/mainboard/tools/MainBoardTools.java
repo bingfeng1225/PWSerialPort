@@ -1,12 +1,8 @@
 package cn.qd.peiwen.demo.serialport.mainboard.tools;
 
-import android.util.Log;
-
-import java.sql.Array;
 import java.util.Arrays;
 
 import cn.qd.peiwen.pwtools.ByteUtils;
-
 
 public class MainBoardTools {
 

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <Button
+        android:id="@+id/open_finger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onClicked"
+        android:text="OPEN FINGER" />
+
+    <Button
+        android:id="@+id/regist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="REGIST" />
+
+    <Button
+        android:id="@+id/download"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="DOWNLOAD" />
+
+    <Button
+        android:id="@+id/upload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="UPLOAD" />
+
+    <Button
+        android:id="@+id/close_finger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="CLOSE FINGER" />
+
+    <Button
+        android:id="@+id/open_rfid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="OPEN RFID" />
+
+    <Button
+        android:id="@+id/close_rfid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="CLOSE RFID" />
+
+    <Button
+        android:id="@+id/open_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="OPEN MAIN BOARD" />
+
+    <Button
+        android:id="@+id/close_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="onClicked"
+        android:text="CLOSE MAIN BOARD" />
+</LinearLayout>

@@ -16,9 +16,6 @@ public class RFIDReaderTools {
         if (data[0] < 0x06) {
             return false;
         }
-        if ((data[1] & 0xff) != 0x06) {
-            return false;
-        }
         if ((data[data.length - 1] & 0xff) != 0x03) {
             return false;
         }
@@ -41,6 +38,10 @@ public class RFIDReaderTools {
                 return new byte[]{
                         0x08, 0x06, (byte) 0x4D, 0x02,
                         0x00, 0x52, (byte) 0xEC, 0x03
+                };
+            case RFID_COMMAND_RESET:
+                return new byte[]{
+                        0x06, 0x05, 0x45, 0x00, (byte) 0xB9, 0x03
                 };
             default:
                 return new byte[]{0x20};

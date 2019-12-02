@@ -1,5 +1,6 @@
 package cn.qd.peiwen.demo.serialport.mainboard;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -26,6 +27,7 @@ public class MainBoardManager implements PWSerialPortListener {
     private PWSerialPortHelper helper;
 
     private byte system = 0x00;
+    private boolean enabled = false;
     private WeakReference<MainBoardListener> listener;
 
     private static MainBoardManager manager;
@@ -48,10 +50,21 @@ public class MainBoardManager implements PWSerialPortListener {
         this.createHandler();
         this.createHelper();
         this.createBuffer();
-        if (this.isReady()) {
+        this.listener = new WeakReference<>(listener);
+    }
+
+    public void enable() {
+        if (this.isReady() && !this.enabled) {
+            this.enabled = true;
             this.helper.open();
         }
-        this.listener = new WeakReference<>(listener);
+    }
+
+    public void disable() {
+        if (this.isReady() && this.enabled) {
+            this.enabled = false;
+            this.helper.close();
+        }
     }
 
     public void release() {
@@ -76,8 +89,12 @@ public class MainBoardManager implements PWSerialPortListener {
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("MainBoard");
-            this.helper.setTimeout(5);
-            this.helper.setPath("/dev/ttyS4");
+            this.helper.setTimeout(2);
+            if ("magton".equals(Build.MODEL)) {
+                this.helper.setPath("/dev/ttyS2");
+            } else {
+                this.helper.setPath("/dev/ttyS4");
+            }
             this.helper.setBaudrate(9600);
             this.helper.init(this);
         }
@@ -124,11 +141,19 @@ public class MainBoardManager implements PWSerialPortListener {
     }
 
     private void switchReadModel() {
-        PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", "1");
+        if (!"magton".equals(Build.MODEL)) {
+            PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", "1");
+        } else {
+            PWSerialPort.writeFile("/sys/class/misc/sunxi-acc/acc/sochip_acc", "0");
+        }
     }
 
     private void switchWriteModel() {
-        PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", "0");
+        if (!"magton".equals(Build.MODEL)) {
+            PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", "0");
+        } else {
+            PWSerialPort.writeFile("/sys/class/misc/sunxi-acc/acc/sochip_acc", "1");
+        }
     }
 
     private void sendCommand(byte[] data) {
@@ -139,7 +164,7 @@ public class MainBoardManager implements PWSerialPortListener {
     }
 
     private boolean checkSystemType(byte system) {
-        if (system == 0x01 || system == 0x02 || system == 0x04) {
+        if (system == 0x01 || system == 0x02 || system == 0x04 || system == 0x05) {
             return true;
         }
         return false;
@@ -231,6 +256,8 @@ public class MainBoardManager implements PWSerialPortListener {
                 break;
             }
             this.buffer.markReaderIndex();
+
+
             byte[] data = new byte[lenth];
             byte model = this.buffer.getByte(2);
             this.buffer.readBytes(data, 0, lenth);
@@ -260,7 +287,7 @@ public class MainBoardManager implements PWSerialPortListener {
 
     private boolean ignorePackage() {
         if (this.system == 0x00) {
-            byte[] bytes = new byte[]{0x01, 0x10};
+            byte[] bytes = new byte[]{0x01, 0x10, 0x40, 0x1F};
             int index = indexOf(this.buffer, bytes);
             if (index != -1) {
                 byte[] data = new byte[index];
@@ -269,7 +296,7 @@ public class MainBoardManager implements PWSerialPortListener {
                 PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
                 return true;
             }
-            bytes = new byte[]{0x02, 0x10};
+            bytes = new byte[]{0x02, 0x10, 0x40, 0x1F};
             index = indexOf(this.buffer, bytes);
             if (index != -1) {
                 byte[] data = new byte[index];
@@ -278,7 +305,16 @@ public class MainBoardManager implements PWSerialPortListener {
                 PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
                 return true;
             }
-            bytes = new byte[]{0x04, 0x10};
+            bytes = new byte[]{0x04, 0x10, 0x40, 0x1F};
+            index = indexOf(this.buffer, bytes);
+            if (index != -1) {
+                byte[] data = new byte[index];
+                this.buffer.readBytes(data, 0, data.length);
+                this.buffer.discardReadBytes();
+                PWLogger.d("指令丢弃:" + ByteUtils.bytes2HexString(data, true, ", "));
+                return true;
+            }
+            bytes = new byte[]{0x05, 0x10, 0x40, 0x1F};
             index = indexOf(this.buffer, bytes);
             if (index != -1) {
                 byte[] data = new byte[index];
@@ -348,8 +384,8 @@ public class MainBoardManager implements PWSerialPortListener {
                     byte[] reply = requestStateReply(data);
                     if (EmptyUtils.isNotEmpty(reply)) {
                         sendCommand(reply);
-                        switchReadModel();
                     }
+                    switchReadModel();
                     fireStateDataReceived(data);
                     break;
                 }
@@ -357,8 +393,8 @@ public class MainBoardManager implements PWSerialPortListener {
                     byte[] reply = requestCommandReply(msg.arg1);
                     if (EmptyUtils.isNotEmpty(reply)) {
                         sendCommand(reply);
-                        switchReadModel();
                     }
+                    switchReadModel();
                     break;
                 }
                 default:

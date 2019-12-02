@@ -292,29 +292,6 @@ int PWSerialPort::serialPortSelect() {
     return select(this->fd + 1, &rfds, NULL, NULL, &time);
 }
 
-int PWSerialPort::serialPortRead(BYTE *buffer, size_t len) {
-    int ret = this->serialPortSelect();
-    if (ret == 0) { //超时
-        return ret;
-    } else if (ret == -1) { //失败
-        return ret;
-    }
-    return static_cast<int>(read(this->fd, buffer, len));
-}
-
-int PWSerialPort::serialPortWrite(BYTE *buffer, size_t len) {
-    if (this->fd == -1) {
-        return -1;
-    }
-    size_t ret = write(this->fd, buffer, len);
-    if (ret == -1) {
-        return -1;
-    }
-    fdatasync(this->fd);
-    fsync(this->fd);
-    return static_cast<int>(ret);
-}
-
 void PWSerialPort::serialPortClose() {
     if (this->fd != -1) {
         close(this->fd);

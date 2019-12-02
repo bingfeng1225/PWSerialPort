@@ -1,78 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@mipmap/fragment_bg"
+    android:padding="20dp"
     tools:context=".MainActivity">
-    <Button
-        android:id="@+id/open_finger"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onClicked"
-        android:text="OPEN FINGER" />
 
-    <Button
-        android:id="@+id/regist"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="REGIST" />
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:background="@drawable/board_radius"
+        android:orientation="horizontal"
+        android:padding="5dp">
 
-    <Button
-        android:id="@+id/download"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="DOWNLOAD" />
+        <TextView
+            android:id="@+id/text_view_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:lineSpacingExtra='10dp'
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/upload"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="UPLOAD" />
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp" />
 
-    <Button
-        android:id="@+id/close_finger"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="CLOSE FINGER" />
+        <TextView
+            android:id="@+id/text_view_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:lineSpacingExtra='10dp'
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/open_rfid"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="OPEN RFID" />
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp" />
 
-    <Button
-        android:id="@+id/close_rfid"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="CLOSE RFID" />
+        <TextView
+            android:id="@+id/text_view_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:lineSpacingExtra='10dp'
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/open_main"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="OPEN MAIN BOARD" />
+    </LinearLayout>
 
-    <Button
-        android:id="@+id/close_main"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:onClick="onClicked"
-        android:text="CLOSE MAIN BOARD" />
-</LinearLayout>
+</RelativeLayout>

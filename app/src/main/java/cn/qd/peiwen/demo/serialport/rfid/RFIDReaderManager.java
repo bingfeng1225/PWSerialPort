@@ -1,5 +1,6 @@
 package cn.qd.peiwen.demo.serialport.rfid;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -75,13 +76,13 @@ public class RFIDReaderManager implements PWSerialPortListener {
     }
 
     private boolean isReady() {
-        if(EmptyUtils.isEmpty(this.handler)){
+        if (EmptyUtils.isEmpty(this.handler)) {
             return false;
         }
-        if(EmptyUtils.isEmpty(this.helper)){
+        if (EmptyUtils.isEmpty(this.helper)) {
             return false;
         }
-        if(EmptyUtils.isEmpty(this.buffer)){
+        if (EmptyUtils.isEmpty(this.buffer)) {
             return false;
         }
         return true;
@@ -90,8 +91,12 @@ public class RFIDReaderManager implements PWSerialPortListener {
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("RFIDReader");
-            this.helper.setTimeout(3);
-            this.helper.setPath("/dev/ttyS1");
+            this.helper.setTimeout(2);
+            if ("magton".equals(Build.MODEL)) {
+                this.helper.setPath("/dev/ttyS5");
+            } else {
+                this.helper.setPath("/dev/ttyS1");
+            }
             this.helper.setBaudrate(115200);
             this.helper.init(this);
         }
@@ -146,19 +151,19 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
-    private void fireRFIDReaderReady(){
+    private void fireRFIDReaderReady() {
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRFIDReaderReady();
         }
     }
 
-    private void fireRFIDReaderException(){
+    private void fireRFIDReaderException() {
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRFIDReaderException();
         }
     }
 
-    private void fireRFIDReaderRecognized(long id, String card){
+    private void fireRFIDReaderRecognized(long id, String card) {
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRFIDReaderRecognized(id, card);
         }
@@ -182,7 +187,9 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
         this.fireRFIDReaderException();
         if (this.enabled) {
-            RFIDReaderTools.resetRFIDReader();
+            if (!"magton".equals(Build.MODEL)) {
+                RFIDReaderTools.resetRFIDReader();
+            }
         }
     }
 
@@ -195,15 +202,17 @@ public class RFIDReaderManager implements PWSerialPortListener {
         if (!this.ready) {
             this.buffer.markReaderIndex();
             byte mark = this.buffer.readByte();
-            if (mark != 0x06) {
-                this.buffer.resetReaderIndex();
-            } else {
+            if (mark == 0x06) {
                 this.ready = true;
                 this.fireRFIDReaderReady();
-                this.buffer.discardReadBytes();
-                this.handler.sendEmptyMessageDelayed(1, 1000);
+                if (this.buffer.readableBytes() == 0) {
+                    this.buffer.discardReadBytes();
+                } else {
+                    this.buffer.resetReaderIndex();
+                }
             }
-        } else {
+        }
+        if (this.buffer.readableBytes() > 0) {
             this.buffer.markReaderIndex();
             int temp = this.buffer.readByte();
             this.buffer.resetReaderIndex();
@@ -222,9 +231,6 @@ public class RFIDReaderManager implements PWSerialPortListener {
             this.handler.sendEmptyMessageDelayed(1, 1000);
         }
     }
-
-
-
 
     private void parseRFIDPackage() {
         int total = this.buffer.readByte();
@@ -279,11 +285,13 @@ public class RFIDReaderManager implements PWSerialPortListener {
                 case 0:
                     times++;
                     if (times < 2) {
-                        sendEmptyMessageDelayed(0, 10);
+                        sendEmptyMessageDelayed(0, 1);
+                    } else {
+                        sendEmptyMessageDelayed(1, 1000);
                     }
                     sendCommand(RFIDReaderCommond.RFID_COMMAND_UART);
                     break;
-                default:
+                case 1:
                     sendCommand(RFIDReaderCommond.RFID_COMMAND_READ);
                     break;
             }

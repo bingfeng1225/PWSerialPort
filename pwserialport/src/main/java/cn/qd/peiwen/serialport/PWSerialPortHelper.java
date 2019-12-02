@@ -213,7 +213,7 @@ public class PWSerialPortHelper {
         this.destorySerialPort();
         if (!isClosed() && !isReleased()) {
             this.fireException();
-            this.phandler.sendEmptyMessageDelayed(PW_SERIAL_PORT_STATE_OPENED, 1000);
+            this.phandler.sendEmptyMessageDelayed(PW_SERIAL_PORT_STATE_OPENED, 3000);
         }
     }
 

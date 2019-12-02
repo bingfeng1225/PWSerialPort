@@ -63,12 +63,7 @@ public:
 
     int serialPortSelect();
 
-    int serialPortRead(BYTE *buffer, size_t len);
-
-    int serialPortWrite(BYTE *buffer, size_t len);
-
     void serialPortClose();
-
 private:
     int fd;
     int parity;

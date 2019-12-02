@@ -1,5 +1,6 @@
 package cn.qd.peiwen.demo.serialport.finger;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -350,7 +351,9 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
         this.fireFingerPrintException();
         if (this.enabled) {
-            FingerPrintTools.resetFingerPrint();
+            if (!"magton".equals(Build.MODEL)) {
+                FingerPrintTools.resetFingerPrint();
+            }
             if (this.state == FingerPrintState.FINGER_STATE_REGIST) {
                 PWLogger.d("指纹注册失败");
                 this.fireRegistFailured();

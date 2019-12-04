@@ -131,7 +131,7 @@ public class PWSerialPortHelper {
         }
     }
 
-    public void write(byte[] bytes) {
+    public synchronized void write(byte[] bytes) {
         try {
             if (isWriteable()) {
                 this.serialPort.outputStream().write(bytes);
@@ -198,7 +198,7 @@ public class PWSerialPortHelper {
         return false;
     }
 
-    private void onOpen() {
+    private synchronized void onOpen() {
         this.createSerialPort();
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
             this.fireConnected();
@@ -217,12 +217,12 @@ public class PWSerialPortHelper {
         }
     }
 
-    private void onClose() {
+    private synchronized void onClose() {
         this.destoryReadThread();
         this.destorySerialPort();
     }
 
-    private void onRelease() {
+    private synchronized void onRelease() {
         this.destoryReadThread();
         this.destorySerialPort();
         this.destoryProcessHandler();

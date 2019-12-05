@@ -14,6 +14,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.qd.peiwen.demo.serialport.finger.hub.HUBController;
 import cn.qd.peiwen.demo.serialport.finger.listener.FingerPrintListener;
 import cn.qd.peiwen.demo.serialport.finger.tools.FingerPrintTools;
 import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintCommond;
@@ -32,6 +33,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     private ByteBuf buffer;
     private HandlerThread thread;
     private FingerHandler handler;
+    private HUBController controller;
     private PWSerialPortHelper helper;
 
     private boolean ready = false;
@@ -73,6 +75,9 @@ public class FingerPrintManager implements PWSerialPortListener {
             this.enabled = true;
             this.helper.open();
             this.state = FingerPrintState.FINGER_STATE_REGIST_MODEL;
+            if ("magton".equals(Build.MODEL)) {
+                createController();
+            }
         }
     }
 
@@ -81,6 +86,9 @@ public class FingerPrintManager implements PWSerialPortListener {
             this.state = FingerPrintState.FINGER_STATE_DISABLED;
             this.enabled = false;
             this.helper.close();
+            if ("magton".equals(Build.MODEL)) {
+                destoryController();
+            }
         }
     }
 
@@ -129,7 +137,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("FingerPrint");
-            this.helper.setTimeout(10);
+            this.helper.setTimeout(5);
             this.helper.setPath("/dev/ttyUSB0");
             this.helper.setBaudrate(115200);
             this.helper.init(this);
@@ -173,6 +181,20 @@ public class FingerPrintManager implements PWSerialPortListener {
         if (EmptyUtils.isNotEmpty(this.buffer)) {
             this.buffer.release();
             this.buffer = null;
+        }
+    }
+
+    private void createController(){
+        if(EmptyUtils.isEmpty(this.controller)){
+            this.controller = new HUBController();
+            this.controller.init();
+        }
+    }
+
+    private void destoryController(){
+        if(EmptyUtils.isNotEmpty(this.controller)){
+            this.controller.release();
+            this.controller = null;
         }
     }
 
@@ -253,7 +275,6 @@ public class FingerPrintManager implements PWSerialPortListener {
             this.listener.get().onRegistStepChanged(step);
         }
     }
-
 
     private void fireRegistSuccessed(int finger) {
         if (EmptyUtils.isNotEmpty(this.listener)) {
@@ -351,7 +372,9 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
         this.fireFingerPrintException();
         if (this.enabled) {
-            if (!"magton".equals(Build.MODEL)) {
+            if ("magton".equals(Build.MODEL)) {
+                this.controller.reset();
+            }else{
                 FingerPrintTools.resetFingerPrint();
             }
             if (this.state == FingerPrintState.FINGER_STATE_REGIST) {

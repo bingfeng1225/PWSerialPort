@@ -1,6 +1,4 @@
-package cn.qd.peiwen.demo.serialport.mainboard.bean;
-
-import java.util.Set;
+package cn.qd.peiwen.demo.bean;
 
 import androidx.annotation.Nullable;
 

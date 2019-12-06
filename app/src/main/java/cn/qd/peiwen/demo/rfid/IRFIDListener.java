@@ -1,6 +1,6 @@
-package cn.qd.peiwen.demo.serialport.rfid;
+package cn.qd.peiwen.demo.rfid;
 
-public interface RFIDReaderListener {
+public interface IRFIDListener {
     void onRFIDReaderReady();
     void onRFIDReaderException();
     void onRFIDReaderRecognized(long id, String card);

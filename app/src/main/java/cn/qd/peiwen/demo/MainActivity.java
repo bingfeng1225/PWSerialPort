@@ -9,77 +9,76 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
-import cn.qd.peiwen.demo.serialport.finger.FingerPrintManager;
-import cn.qd.peiwen.demo.serialport.finger.FingerPrintListener;
-import cn.qd.peiwen.demo.serialport.mainboard.MainBoardManager;
+import cn.qd.peiwen.demo.finger.FPManager;
+import cn.qd.peiwen.demo.finger.IFPListener;
+import cn.qd.peiwen.demo.refriger.LTFManager;
 import cn.qd.peiwen.demo.bean.MainBoardEntity;
-import cn.qd.peiwen.demo.serialport.mainboard.MainBoardListener;
-import cn.qd.peiwen.demo.serialport.rfid.RFIDReaderManager;
-import cn.qd.peiwen.demo.serialport.rfid.RFIDReaderListener;
+import cn.qd.peiwen.demo.refriger.ILTFListener;
+import cn.qd.peiwen.demo.rfid.RFIDManager;
+import cn.qd.peiwen.demo.rfid.IRFIDListener;
 import cn.qd.peiwen.pwlogger.PWLogger;
-import cn.qd.peiwen.pwtools.ByteUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 
-public class MainActivity extends AppCompatActivity implements MainBoardListener, RFIDReaderListener, FingerPrintListener {
+public class MainActivity extends AppCompatActivity implements ILTFListener, IRFIDListener, IFPListener {
     private MainBoardEntity entity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        MainBoardManager.getInstance().init(this);
-        RFIDReaderManager.getInstance().init(this);
-        FingerPrintManager.getInstance().init(this);
+        LTFManager.getInstance().init(this);
+        RFIDManager.getInstance().init(this);
+        FPManager.getInstance().init(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        MainBoardManager.getInstance().release();
-        RFIDReaderManager.getInstance().release();
-        FingerPrintManager.getInstance().release();
+        LTFManager.getInstance().release();
+        RFIDManager.getInstance().release();
+        FPManager.getInstance().release();
     }
 
     public void onClicked(View view) {
         switch (view.getId()) {
             case R.id.regist:
-                if (!FingerPrintManager.getInstance().isBusy()) {
-                    FingerPrintManager.getInstance().regist();
+                if (!FPManager.getInstance().isBusy()) {
+                    FPManager.getInstance().regist();
                 }
                 break;
             case R.id.download:
-                if (!FingerPrintManager.getInstance().isBusy()) {
-                    FingerPrintManager.getInstance().download("/sdcard");
+                if (!FPManager.getInstance().isBusy()) {
+                    FPManager.getInstance().download("/sdcard");
                 }
                 break;
             case R.id.upload:
-                if (!FingerPrintManager.getInstance().isBusy()) {
+                if (!FPManager.getInstance().isBusy()) {
                     List<String> files = new ArrayList<>();
                     files.add("/sdcard/finger.1");
                     files.add("/sdcard/finger.2");
                     files.add("/sdcard/finger.3");
-                    FingerPrintManager.getInstance().uplaod(files);
+                    FPManager.getInstance().uplaod(files);
                 }
                 break;
             case R.id.open_finger:
-                FingerPrintManager.getInstance().enable();
+                FPManager.getInstance().enable();
                 break;
             case R.id.close_finger:
-                FingerPrintManager.getInstance().disable();
+                FPManager.getInstance().disable();
                 break;
             case R.id.open_rfid:
-                RFIDReaderManager.getInstance().enable();
+                RFIDManager.getInstance().enable();
                 break;
             case R.id.close_rfid:
-                RFIDReaderManager.getInstance().disable();
+                RFIDManager.getInstance().disable();
                 break;
             case R.id.open_main:
-                MainBoardManager.getInstance().enable();
+                LTFManager.getInstance().enable();
                 break;
             case R.id.close_main:
-                MainBoardManager.getInstance().disable();
+                LTFManager.getInstance().disable();
                 break;
         }
     }

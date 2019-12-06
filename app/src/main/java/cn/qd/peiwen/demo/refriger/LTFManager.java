@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.serialport.mainboard;
+package cn.qd.peiwen.demo.refriger;
 
 import android.os.Build;
 import android.os.Handler;
@@ -6,12 +6,10 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
-import org.apache.log4j.chainsaw.Main;
-
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import cn.qd.peiwen.demo.serialport.mainboard.tools.MainBoardTools;
+import cn.qd.peiwen.demo.refriger.tools.LTFTools;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -21,7 +19,7 @@ import cn.qd.peiwen.serialport.PWSerialPortListener;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class MainBoardManager implements PWSerialPortListener {
+public class LTFManager implements PWSerialPortListener {
     private ByteBuf buffer;
     private HandlerThread thread;
     private MainBoardHandler handler;
@@ -29,25 +27,25 @@ public class MainBoardManager implements PWSerialPortListener {
 
     private byte system = 0x00;
     private boolean enabled = false;
-    private WeakReference<MainBoardListener> listener;
+    private WeakReference<ILTFListener> listener;
 
-    private static MainBoardManager manager;
+    private static LTFManager manager;
 
-    public static MainBoardManager getInstance() {
+    public static LTFManager getInstance() {
         if (manager == null) {
-            synchronized (MainBoardManager.class) {
+            synchronized (LTFManager.class) {
                 if (manager == null)
-                    manager = new MainBoardManager();
+                    manager = new LTFManager();
             }
         }
         return manager;
     }
 
-    private MainBoardManager() {
+    private LTFManager() {
 
     }
 
-    public void init(MainBoardListener listener) {
+    public void init(ILTFListener listener) {
         this.createHandler();
         this.createHelper();
         this.createBuffer();
@@ -55,14 +53,14 @@ public class MainBoardManager implements PWSerialPortListener {
     }
 
     public void enable() {
-        if (this.isReady() && !this.enabled) {
+        if (this.isInitialized() && !this.enabled) {
             this.enabled = true;
             this.helper.open();
         }
     }
 
     public void disable() {
-        if (this.isReady() && this.enabled) {
+        if (this.isInitialized() && this.enabled) {
             this.enabled = false;
             this.helper.close();
         }
@@ -74,7 +72,7 @@ public class MainBoardManager implements PWSerialPortListener {
         this.destoryBuffer();
     }
 
-    private boolean isReady() {
+    private boolean isInitialized() {
         if (EmptyUtils.isEmpty(this.handler)) {
             return false;
         }
@@ -89,7 +87,7 @@ public class MainBoardManager implements PWSerialPortListener {
 
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
-            this.helper = new PWSerialPortHelper("MainBoard");
+            this.helper = new PWSerialPortHelper("LTFManager");
             this.helper.setTimeout(2);
             if ("magton".equals(Build.MODEL)) {
                 this.helper.setPath("/dev/ttyS2");
@@ -101,10 +99,6 @@ public class MainBoardManager implements PWSerialPortListener {
         }
     }
 
-    private boolean checkHelper(PWSerialPortHelper helper) {
-        return (this.isReady() && this.helper.equals(helper));
-    }
-
     private void destoryHelper() {
         if (EmptyUtils.isNotEmpty(this.helper)) {
             this.helper.release();
@@ -114,7 +108,7 @@ public class MainBoardManager implements PWSerialPortListener {
 
     private void createHandler() {
         if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
-            this.thread = new HandlerThread("FingerPrint");
+            this.thread = new HandlerThread("LTFManager");
             this.thread.start();
             this.handler = new MainBoardHandler(this.thread.getLooper());
         }
@@ -158,7 +152,7 @@ public class MainBoardManager implements PWSerialPortListener {
     }
 
     private void sendCommand(byte[] data) {
-        if (this.isReady()) {
+        if (this.isInitialized()) {
             this.helper.write(data);
             PWLogger.d("指令发送:" + ByteUtils.bytes2HexString(data, true, ", "));
         }
@@ -176,80 +170,6 @@ public class MainBoardManager implements PWSerialPortListener {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onConnected(PWSerialPortHelper helper) {
-        if (!checkHelper(helper)) {
-            return;
-        }
-        this.buffer.clear();
-        this.system = 0x00;
-        this.switchReadModel();
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onMainBoardReady();
-        }
-    }
-
-    @Override
-    public void onException(PWSerialPortHelper helper) {
-        if (!checkHelper(helper)) {
-            return;
-        }
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onMainBoardException();
-        }
-    }
-
-    @Override
-    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
-        if (!checkHelper(helper)) {
-            return;
-        }
-        this.buffer.writeBytes(buffer, 0, buffer.length);
-        while (this.buffer.readableBytes() >= 2) {
-            byte system = this.buffer.getByte(0);
-            byte command = this.buffer.getByte(1);
-            if (!this.checkSystemType(system) || !this.checkCommandType(command)) {
-                if (this.ignorePackage()) {
-                    continue;
-                } else {
-                    break;
-                }
-            }
-            int lenth = (command == 0x10) ? 109 : 8;
-            if (this.buffer.readableBytes() < lenth) {
-                break;
-            }
-            this.buffer.markReaderIndex();
-
-            byte[] data = new byte[lenth];
-            byte model = this.buffer.getByte(2);
-            this.buffer.readBytes(data, 0, lenth);
-            if (!MainBoardTools.checkFrame(data)) {
-                this.buffer.resetReaderIndex();
-                this.buffer.skipBytes(2);
-                this.buffer.discardReadBytes();
-                continue;
-            }
-            this.buffer.discardReadBytes();
-            if (this.system == 0x00) {
-                this.system = system;
-                if (EmptyUtils.isNotEmpty(this.listener)) {
-                    this.listener.get().onSystemTypeChanged(this.system);
-                }
-            }
-            PWLogger.d("指令接收:" + ByteUtils.bytes2HexString(data, true, ", "));
-            this.switchWriteModel();
-            Message msg = Message.obtain();
-            msg.what = command;
-            if (command == 0x10) {
-                msg.obj = data;
-            } else {
-                msg.arg1 = model & 0xFF;
-            }
-            this.handler.sendMessageDelayed(msg, 5);
-        }
     }
 
     private boolean ignorePackage() {
@@ -338,7 +258,7 @@ public class MainBoardManager implements PWSerialPortListener {
     }
 
     private void stateDataReceived(byte[] data){
-        this.sendCommand(MainBoardTools.makeStateResponse(data));
+        this.sendCommand(LTFTools.makeStateResponse(data));
         this.switchReadModel();
         if(EmptyUtils.isNotEmpty(this.listener)){
             this.listener.get().onStateDataReceived(data);
@@ -355,6 +275,82 @@ public class MainBoardManager implements PWSerialPortListener {
         }
         this.switchReadModel();
     }
+
+    @Override
+    public void onConnected(PWSerialPortHelper helper) {
+        if(!this.isInitialized() || !helper.equals(this.helper))   {
+            return;
+        }
+        this.buffer.clear();
+        this.system = 0x00;
+        this.switchReadModel();
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onMainBoardReady();
+        }
+    }
+
+    @Override
+    public void onException(PWSerialPortHelper helper) {
+        if(!this.isInitialized() || !helper.equals(this.helper))   {
+            return;
+        }
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onMainBoardException();
+        }
+    }
+
+    @Override
+    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
+        if(!this.isInitialized() || !helper.equals(this.helper))   {
+            return;
+        }
+        this.buffer.writeBytes(buffer, 0, buffer.length);
+        while (this.buffer.readableBytes() >= 2) {
+            byte system = this.buffer.getByte(0);
+            byte command = this.buffer.getByte(1);
+            if (!this.checkSystemType(system) || !this.checkCommandType(command)) {
+                if (this.ignorePackage()) {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+            int lenth = (command == 0x10) ? 109 : 8;
+            if (this.buffer.readableBytes() < lenth) {
+                break;
+            }
+            this.buffer.markReaderIndex();
+
+            byte[] data = new byte[lenth];
+            byte model = this.buffer.getByte(2);
+            this.buffer.readBytes(data, 0, lenth);
+            if (!LTFTools.checkFrame(data)) {
+                this.buffer.resetReaderIndex();
+                this.buffer.skipBytes(2);
+                this.buffer.discardReadBytes();
+                continue;
+            }
+            this.buffer.discardReadBytes();
+            if (this.system == 0x00) {
+                this.system = system;
+                if (EmptyUtils.isNotEmpty(this.listener)) {
+                    this.listener.get().onSystemTypeChanged(this.system);
+                }
+            }
+            PWLogger.d("指令接收:" + ByteUtils.bytes2HexString(data, true, ", "));
+            this.switchWriteModel();
+            Message msg = Message.obtain();
+            msg.what = command;
+            if (command == 0x10) {
+                msg.obj = data;
+            } else {
+                msg.arg1 = model & 0xFF;
+            }
+            this.handler.sendMessageDelayed(msg, 5);
+        }
+    }
+
+
     private class MainBoardHandler extends Handler {
         public MainBoardHandler(Looper looper) {
             super(looper);

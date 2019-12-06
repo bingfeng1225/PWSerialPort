@@ -1,6 +1,6 @@
-package cn.qd.peiwen.demo.serialport.finger;
+package cn.qd.peiwen.demo.finger;
 
-public interface FingerPrintListener {
+public interface IFPListener {
     void onRegistStated();
     void onRegistTimeout();
     void onRegistFailured();

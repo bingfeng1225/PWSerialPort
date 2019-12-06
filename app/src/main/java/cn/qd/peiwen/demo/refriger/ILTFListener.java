@@ -1,6 +1,6 @@
-package cn.qd.peiwen.demo.serialport.mainboard;
+package cn.qd.peiwen.demo.refriger;
 
-public interface MainBoardListener {
+public interface ILTFListener {
     void onMainBoardReady();
     void onMainBoardException();
     void onSystemTypeChanged(int type);

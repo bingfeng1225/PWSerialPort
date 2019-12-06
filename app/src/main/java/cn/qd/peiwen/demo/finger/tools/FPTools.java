@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.serialport.finger.tools;
+package cn.qd.peiwen.demo.finger.tools;
 
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 
-public class FingerPrintTools {
+public class FPTools {
     public static final int FINGER_COMMAND_NONE = 0x00;
     public static final int FINGER_COMMAND_CLEAR = 0x05;
     public static final int FINGER_COMMAND_BREAK = 0xFE;

@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.serialport.rfid.tools;
+package cn.qd.peiwen.demo.rfid.tools;
 
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
@@ -6,7 +6,7 @@ import cn.qd.peiwen.pwtools.ThreadUtils;
 import cn.qd.peiwen.serialport.PWSerialPort;
 
 
-public class RFIDReaderTools {
+public class RFIDTools {
     public static final int RFID_COMMAND_UART = 0;
     public static final int RFID_COMMAND_READ = 1;
     public static final int RFID_COMMAND_RESET = 2;

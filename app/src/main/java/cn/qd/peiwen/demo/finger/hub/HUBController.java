@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.serialport.finger.hub;
+package cn.qd.peiwen.demo.finger.hub;
 
 import android.os.HandlerThread;
 

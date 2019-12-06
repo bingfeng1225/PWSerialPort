@@ -1,10 +1,10 @@
-package cn.qd.peiwen.demo.serialport.mainboard.tools;
+package cn.qd.peiwen.demo.refriger.tools;
 
 import java.util.Arrays;
 
 import cn.qd.peiwen.pwtools.ByteUtils;
 
-public class MainBoardTools {
+public class LTFTools {
 
     public static boolean checkFrame(byte[] data) {
         byte[] crc = new byte[]{data[data.length - 2], data[data.length - 1]};

@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.serialport.rfid;
+package cn.qd.peiwen.demo.rfid;
 
 import android.os.Build;
 import android.os.Handler;
@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteOrder;
 
-import cn.qd.peiwen.demo.serialport.rfid.tools.RFIDReaderTools;
+import cn.qd.peiwen.demo.rfid.tools.RFIDTools;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -19,7 +19,7 @@ import cn.qd.peiwen.serialport.PWSerialPortListener;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class RFIDReaderManager implements PWSerialPortListener {
+public class RFIDManager implements PWSerialPortListener {
     private ByteBuf buffer;
     private RFIDHandler handler;
     private HandlerThread thread;
@@ -28,25 +28,25 @@ public class RFIDReaderManager implements PWSerialPortListener {
     private int times = 0;
     private boolean ready = false;
     private boolean enabled = false;
-    private WeakReference<RFIDReaderListener> listener;
+    private WeakReference<IRFIDListener> listener;
 
-    private static RFIDReaderManager manager;
+    private static RFIDManager manager;
 
-    public static RFIDReaderManager getInstance() {
+    public static RFIDManager getInstance() {
         if (manager == null) {
-            synchronized (RFIDReaderManager.class) {
+            synchronized (RFIDManager.class) {
                 if (manager == null)
-                    manager = new RFIDReaderManager();
+                    manager = new RFIDManager();
             }
         }
         return manager;
     }
 
-    private RFIDReaderManager() {
+    private RFIDManager() {
 
     }
 
-    public void init(RFIDReaderListener listener) {
+    public void init(IRFIDListener listener) {
         this.createHandler();
         this.createHelper();
         this.createBuffer();
@@ -54,14 +54,14 @@ public class RFIDReaderManager implements PWSerialPortListener {
     }
 
     public void enable() {
-        if (this.isReady() && !this.enabled) {
+        if (this.isInitialized() && !this.enabled) {
             this.enabled = true;
             this.helper.open();
         }
     }
 
     public void disable() {
-        if (this.isReady() && this.enabled) {
+        if (this.isInitialized() && this.enabled) {
             this.enabled = false;
             this.helper.close();
         }
@@ -73,7 +73,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
         this.destoryBuffer();
     }
 
-    private boolean isReady() {
+    private boolean isInitialized() {
         if (EmptyUtils.isEmpty(this.handler)) {
             return false;
         }
@@ -88,7 +88,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
 
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
-            this.helper = new PWSerialPortHelper("RFIDReader");
+            this.helper = new PWSerialPortHelper("RFIDManager");
             this.helper.setTimeout(2);
             if ("magton".equals(Build.MODEL)) {
                 this.helper.setPath("/dev/ttyS5");
@@ -100,10 +100,6 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
-    private boolean checkHelper(PWSerialPortHelper helper) {
-        return (this.isReady() && this.helper.equals(helper));
-    }
-
     private void destoryHelper() {
         if (EmptyUtils.isNotEmpty(this.helper)) {
             this.helper.release();
@@ -113,7 +109,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
 
     private void createHandler() {
         if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
-            this.thread = new HandlerThread("RFIDReader");
+            this.thread = new HandlerThread("RFIDManager");
             this.thread.start();
             this.handler = new RFIDHandler(this.thread.getLooper());
         }
@@ -142,8 +138,8 @@ public class RFIDReaderManager implements PWSerialPortListener {
     }
 
     private void sendCommand(int type) {
-        if (this.isReady()) {
-            byte[] data = RFIDReaderTools.createFingerCommand(type);
+        if (this.isInitialized()) {
+            byte[] data = RFIDTools.createFingerCommand(type);
             PWLogger.d("指令发送：" + ByteUtils.bytes2HexString(data));
             this.helper.write(data);
         }
@@ -151,7 +147,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
 
     @Override
     public void onConnected(PWSerialPortHelper helper) {
-        if (!checkHelper(helper)) {
+        if(!this.isInitialized() || !helper.equals(this.helper))   {
             return;
         }
         this.times = 0;
@@ -162,20 +158,20 @@ public class RFIDReaderManager implements PWSerialPortListener {
 
     @Override
     public void onException(PWSerialPortHelper helper) {
-        if (!checkHelper(helper)) {
+        if(!this.isInitialized() || !helper.equals(this.helper))   {
             return;
         }
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRFIDReaderException();
         }
         if (this.enabled && !"magton".equals(Build.MODEL)) {
-            RFIDReaderTools.resetRFIDReader();
+            RFIDTools.resetRFIDReader();
         }
     }
 
     @Override
     public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
-        if (!checkHelper(helper)) {
+        if(!this.isInitialized() || !helper.equals(this.helper))   {
             return;
         }
         this.buffer.writeBytes(buffer, 0, buffer.length);
@@ -205,7 +201,7 @@ public class RFIDReaderManager implements PWSerialPortListener {
             byte[] data = new byte[temp];
             this.buffer.readBytes(data, 0, temp);
             this.buffer.resetReaderIndex();
-            if (!RFIDReaderTools.checkFrame(data)) {
+            if (!RFIDTools.checkFrame(data)) {
                 return;
             }
             PWLogger.d("指令回复:" + ByteUtils.bytes2HexString(data));
@@ -272,10 +268,10 @@ public class RFIDReaderManager implements PWSerialPortListener {
                     } else {
                         sendEmptyMessageDelayed(1, 1000);
                     }
-                    sendCommand(RFIDReaderTools.RFID_COMMAND_UART);
+                    sendCommand(RFIDTools.RFID_COMMAND_UART);
                     break;
                 case 1:
-                    sendCommand(RFIDReaderTools.RFID_COMMAND_READ);
+                    sendCommand(RFIDTools.RFID_COMMAND_READ);
                     break;
             }
         }

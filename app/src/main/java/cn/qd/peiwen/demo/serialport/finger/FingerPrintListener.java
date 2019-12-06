@@ -1,4 +1,4 @@
-package cn.qd.peiwen.demo.serialport.finger.listener;
+package cn.qd.peiwen.demo.serialport.finger;
 
 public interface FingerPrintListener {
     void onRegistStated();

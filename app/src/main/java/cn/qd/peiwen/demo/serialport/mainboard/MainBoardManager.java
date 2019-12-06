@@ -6,10 +6,11 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import org.apache.log4j.chainsaw.Main;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import cn.qd.peiwen.demo.serialport.mainboard.listener.MainBoardListener;
 import cn.qd.peiwen.demo.serialport.mainboard.tools.MainBoardTools;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
@@ -177,45 +178,6 @@ public class MainBoardManager implements PWSerialPortListener {
         return false;
     }
 
-
-    private void fireMainBoardReady() {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onMainBoardReady();
-        }
-    }
-
-    private void fireMainBoardException() {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onMainBoardException();
-        }
-    }
-
-    private void fireSystemTypeChanged(int type) {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onSystemTypeChanged(type);
-        }
-    }
-
-    private void fireStateDataReceived(byte[] data) {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onStateDataReceived(data);
-        }
-    }
-
-    private byte[] requestStateReply(byte[] data) {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            return this.listener.get().requestStateReply(data);
-        }
-        return null;
-    }
-
-    private byte[] requestCommandReply(int type) {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            return this.listener.get().requestCommandReply(type);
-        }
-        return null;
-    }
-
     @Override
     public void onConnected(PWSerialPortHelper helper) {
         if (!checkHelper(helper)) {
@@ -224,7 +186,9 @@ public class MainBoardManager implements PWSerialPortListener {
         this.buffer.clear();
         this.system = 0x00;
         this.switchReadModel();
-        this.fireMainBoardReady();
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onMainBoardReady();
+        }
     }
 
     @Override
@@ -232,7 +196,9 @@ public class MainBoardManager implements PWSerialPortListener {
         if (!checkHelper(helper)) {
             return;
         }
-        this.fireMainBoardException();
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onMainBoardException();
+        }
     }
 
     @Override
@@ -257,7 +223,6 @@ public class MainBoardManager implements PWSerialPortListener {
             }
             this.buffer.markReaderIndex();
 
-
             byte[] data = new byte[lenth];
             byte model = this.buffer.getByte(2);
             this.buffer.readBytes(data, 0, lenth);
@@ -270,7 +235,9 @@ public class MainBoardManager implements PWSerialPortListener {
             this.buffer.discardReadBytes();
             if (this.system == 0x00) {
                 this.system = system;
-                this.fireSystemTypeChanged(system);
+                if (EmptyUtils.isNotEmpty(this.listener)) {
+                    this.listener.get().onSystemTypeChanged(this.system);
+                }
             }
             PWLogger.d("指令接收:" + ByteUtils.bytes2HexString(data, true, ", "));
             this.switchWriteModel();
@@ -370,6 +337,24 @@ public class MainBoardManager implements PWSerialPortListener {
         return -1;
     }
 
+    private void stateDataReceived(byte[] data){
+        this.sendCommand(MainBoardTools.makeStateResponse(data));
+        this.switchReadModel();
+        if(EmptyUtils.isNotEmpty(this.listener)){
+            this.listener.get().onStateDataReceived(data);
+        }
+    }
+
+    private void requestCommandReceived(int model){
+        byte[] reply = null;
+        if(EmptyUtils.isNotEmpty(this.listener)) {
+            reply = this.listener.get().requestCommandResponse(model);
+        }
+        if (EmptyUtils.isNotEmpty(reply)) {
+            sendCommand(reply);
+        }
+        this.switchReadModel();
+    }
     private class MainBoardHandler extends Handler {
         public MainBoardHandler(Looper looper) {
             super(looper);
@@ -380,20 +365,14 @@ public class MainBoardManager implements PWSerialPortListener {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 0x10: {
-                    byte[] data = (byte[]) msg.obj;
-                    byte[] reply = requestStateReply(data);
-                    if (EmptyUtils.isNotEmpty(reply)) {
-                        sendCommand(reply);
-                    }
-                    switchReadModel();
-                    fireStateDataReceived(data);
+                    stateDataReceived((byte[]) msg.obj);
                     break;
                 }
                 case 0x03: {
-                    byte[] reply = requestCommandReply(msg.arg1);
-                    if (EmptyUtils.isNotEmpty(reply)) {
-                        sendCommand(reply);
-                    }
+                    requestCommandReceived(msg.arg1);
+                    break;
+                }
+                case 0x04:{
                     switchReadModel();
                     break;
                 }

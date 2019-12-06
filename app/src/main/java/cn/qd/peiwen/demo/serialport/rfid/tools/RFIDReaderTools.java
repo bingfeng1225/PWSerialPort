@@ -1,6 +1,5 @@
 package cn.qd.peiwen.demo.serialport.rfid.tools;
 
-import cn.qd.peiwen.demo.serialport.rfid.types.RFIDReaderCommond;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.ThreadUtils;
@@ -8,6 +7,10 @@ import cn.qd.peiwen.serialport.PWSerialPort;
 
 
 public class RFIDReaderTools {
+    public static final int RFID_COMMAND_UART = 0;
+    public static final int RFID_COMMAND_READ = 1;
+    public static final int RFID_COMMAND_RESET = 2;
+
     private static final String RFID_RESET_ON = "1";
     private static final String RFID_RESET_OFF = "0";
     private static final String RFID_RESET_PATH = "/sys/kernel/finger_set/nfc_value";
@@ -32,7 +35,7 @@ public class RFIDReaderTools {
         PWLogger.d("RFID Reader  ON");
     }
 
-    public static byte[] createFingerCommand(RFIDReaderCommond type) {
+    public static byte[] createFingerCommand(int type) {
         switch (type) {
             case RFID_COMMAND_READ:
                 return new byte[]{

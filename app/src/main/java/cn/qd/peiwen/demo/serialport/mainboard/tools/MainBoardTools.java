@@ -11,4 +11,13 @@ public class MainBoardTools {
         byte[] check = ByteUtils.computeCRCCode(data, 0, data.length - 2);
         return Arrays.equals(crc, check);
     }
+
+    public static byte[] makeStateResponse(byte[] data){
+        byte[] buffer = new byte[8];
+        System.arraycopy(data, 0, buffer, 0, buffer.length - 2);
+        byte[] crc = ByteUtils.computeCRCCode(data, 0, buffer.length - 2);
+        buffer[buffer.length - 2] = crc[0];
+        buffer[buffer.length - 1] = crc[1];
+        return buffer;
+    }
 }

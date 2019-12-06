@@ -15,10 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.qd.peiwen.demo.serialport.finger.hub.HUBController;
-import cn.qd.peiwen.demo.serialport.finger.listener.FingerPrintListener;
 import cn.qd.peiwen.demo.serialport.finger.tools.FingerPrintTools;
-import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintCommond;
-import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintState;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -36,8 +33,8 @@ public class FingerPrintManager implements PWSerialPortListener {
     private HUBController controller;
     private PWSerialPortHelper helper;
 
+    private int state;
     private boolean ready = false;
-    private FingerPrintState state;
     private boolean enabled = false;
     private WeakReference<FingerPrintListener> listener;
 
@@ -45,6 +42,14 @@ public class FingerPrintManager implements PWSerialPortListener {
     private String filePath = null;
     private List<String> fileList = null;
     private List<Integer> fingerList = null;
+
+    private static final int FINGER_STATE_DISABLED = 0;
+    private static final int FINGER_STATE_REGIST = 1;
+    private static final int FINGER_STATE_UPLOAD = 2;
+    private static final int FINGER_STATE_COMPARE = 3;
+    private static final int FINGER_STATE_DOWNLOAD = 4;
+    private static final int FINGER_STATE_REGIST_MODEL = 5;
+
 
     private static FingerPrintManager manager;
 
@@ -66,15 +71,15 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.createHandler();
         this.createHelper();
         this.createBuffer();
+        this.state = FINGER_STATE_DISABLED;
         this.listener = new WeakReference<>(listener);
-        this.state = FingerPrintState.FINGER_STATE_DISABLED;
     }
 
     public void enable() {
         if (this.isReady() && !this.enabled) {
             this.enabled = true;
             this.helper.open();
-            this.state = FingerPrintState.FINGER_STATE_REGIST_MODEL;
+            this.state = FINGER_STATE_REGIST_MODEL;
             if ("magton".equals(Build.MODEL)) {
                 createController();
             }
@@ -83,7 +88,7 @@ public class FingerPrintManager implements PWSerialPortListener {
 
     public void disable() {
         if (this.enabled && this.isReady()) {
-            this.state = FingerPrintState.FINGER_STATE_DISABLED;
+            this.state = FINGER_STATE_DISABLED;
             this.enabled = false;
             this.helper.close();
             if ("magton".equals(Build.MODEL)) {
@@ -94,28 +99,28 @@ public class FingerPrintManager implements PWSerialPortListener {
 
     public void regist() {
         this.fireRegistStated();
-        this.changeFingerPrintState(FingerPrintState.FINGER_STATE_REGIST);
+        this.changeFingerPrintState(FINGER_STATE_REGIST);
     }
 
     public void uplaod(List<String> fileList) {
         this.currentIndex = -1;
         this.fileList = fileList;
         this.fireUploadStated();
-        this.changeFingerPrintState(FingerPrintState.FINGER_STATE_UPLOAD);
+        this.changeFingerPrintState(FINGER_STATE_UPLOAD);
     }
 
     public void download(String filePath) {
         this.filePath = filePath;
         this.fireDownloadStated();
-        this.changeFingerPrintState(FingerPrintState.FINGER_STATE_DOWNLOAD);
+        this.changeFingerPrintState(FINGER_STATE_DOWNLOAD);
     }
 
     public boolean isBusy() {
-        return (this.state != FingerPrintState.FINGER_STATE_COMPARE);
+        return (this.state != FINGER_STATE_COMPARE);
     }
 
     public void release() {
-        this.state = FingerPrintState.FINGER_STATE_DISABLED;
+        this.state = FINGER_STATE_DISABLED;
         this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();
@@ -137,7 +142,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("FingerPrint");
-            this.helper.setTimeout(5);
+            this.helper.setTimeout(10);
             this.helper.setPath("/dev/ttyUSB0");
             this.helper.setBaudrate(115200);
             this.helper.init(this);
@@ -184,15 +189,15 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
     }
 
-    private void createController(){
-        if(EmptyUtils.isEmpty(this.controller)){
+    private void createController() {
+        if (EmptyUtils.isEmpty(this.controller)) {
             this.controller = new HUBController();
             this.controller.init();
         }
     }
 
-    private void destoryController(){
-        if(EmptyUtils.isNotEmpty(this.controller)){
+    private void destoryController() {
+        if (EmptyUtils.isNotEmpty(this.controller)) {
             this.controller.release();
             this.controller = null;
         }
@@ -204,43 +209,43 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
     }
 
-    private void sendCommand(FingerPrintCommond type) {
+    private void sendCommand(int type) {
         this.sendCommand(type, 0);
     }
 
-    private void sendCommand(FingerPrintCommond type, int param) {
+    private void sendCommand(int type, int param) {
         byte[] data = FingerPrintTools.createFingerCommand(type, param);
         PWLogger.d("指令发送：" + ByteUtils.bytes2HexString(data));
         this.sendCommand(data);
     }
 
-    private void changeFingerPrintState(FingerPrintState state) {
+    private void changeFingerPrintState(int state) {
         this.state = state;
         PWLogger.d("中断模组当前操作");
-        this.sendCommand(FingerPrintCommond.FINGER_COMMAND_BREAK);
+        this.sendCommand(FingerPrintTools.FINGER_COMMAND_BREAK);
     }
 
     private void operationInterrupted() {
         switch (this.state) {
             case FINGER_STATE_REGIST:
                 PWLogger.d("设置抬手检测");
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_HAND_DETECTION);
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_REGIST_HAND_DETECTION);
                 break;
             case FINGER_STATE_UPLOAD:
                 PWLogger.d("清空所有已注册指纹");
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_CLEAR);
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_CLEAR);
                 break;
             case FINGER_STATE_DOWNLOAD:
                 PWLogger.d("查询所有已注册指纹");
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_SEARCH_FINGER);
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_SEARCH_FINGER);
                 break;
             case FINGER_STATE_REGIST_MODEL:
                 PWLogger.d("设置拒绝重复注册");
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_REFUSE_REPEAT);
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_REGIST_REFUSE_REPEAT);
                 break;
             default: {
                 PWLogger.d("开始指纹识别");
-                this.handler.sendEmptyMessageDelayed(FingerPrintCommond.FINGER_COMMAND_COMPARE.value, 1000);
+                this.handler.sendEmptyMessageDelayed(FingerPrintTools.FINGER_COMMAND_COMPARE, 1000);
                 break;
             }
         }
@@ -362,7 +367,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         }
         this.ready = false;
         this.buffer.clear();
-        this.changeFingerPrintState(FingerPrintState.FINGER_STATE_REGIST_MODEL);
+        this.changeFingerPrintState(FINGER_STATE_REGIST_MODEL);
     }
 
     @Override
@@ -374,16 +379,16 @@ public class FingerPrintManager implements PWSerialPortListener {
         if (this.enabled) {
             if ("magton".equals(Build.MODEL)) {
                 this.controller.reset();
-            }else{
+            } else {
                 FingerPrintTools.resetFingerPrint();
             }
-            if (this.state == FingerPrintState.FINGER_STATE_REGIST) {
+            if (this.state == FINGER_STATE_REGIST) {
                 PWLogger.d("指纹注册失败");
                 this.fireRegistFailured();
-            } else if (this.state == FingerPrintState.FINGER_STATE_UPLOAD) {
+            } else if (this.state == FINGER_STATE_UPLOAD) {
                 PWLogger.d("指纹上传失败");
                 this.fireUploadFailured();
-            } else if (this.state == FingerPrintState.FINGER_STATE_DOWNLOAD) {
+            } else if (this.state == FINGER_STATE_DOWNLOAD) {
                 PWLogger.d("指纹下载失败");
                 this.fireDownloadFailured();
             }
@@ -411,42 +416,42 @@ public class FingerPrintManager implements PWSerialPortListener {
             return;
         }
         PWLogger.d("指令回复：" + ByteUtils.bytes2HexString(data));
-        FingerPrintCommond command = FingerPrintCommond.get(data[1] & 0xff);
+        int command = data[1] & 0xff;
         switch (command) {
-            case FINGER_COMMAND_CLEAR://删除所有已注册指纹
+            case FingerPrintTools.FINGER_COMMAND_CLEAR://删除所有已注册指纹
                 this.processClearCommand();
                 break;
-            case FINGER_COMMAND_BREAK://中断当前操作
+            case FingerPrintTools.FINGER_COMMAND_BREAK://中断当前操作
                 this.processBreakCommand();
                 break;
-            case FINGER_COMMAND_UPLOAD://中断当前操作
+            case FingerPrintTools.FINGER_COMMAND_UPLOAD://中断当前操作
                 this.processUploadCommand();
                 break;
-            case FINGER_COMMAND_DELETE:
+            case FingerPrintTools.FINGER_COMMAND_DELETE:
                 this.processDeleteCommand();
                 break;
-            case FINGER_COMMAND_COMPARE:
+            case FingerPrintTools.FINGER_COMMAND_COMPARE:
                 this.processCompareCommand();
                 break;
-            case FINGER_COMMAND_DOWNLOAD:
+            case FingerPrintTools.FINGER_COMMAND_DOWNLOAD:
                 this.processDownloadCommand();
                 break;
-            case FINGER_COMMAND_REGIST_FIRST://指纹注册第一步结果
+            case FingerPrintTools.FINGER_COMMAND_REGIST_FIRST://指纹注册第一步结果
                 this.processRegistFirstCommand();
                 break;
-            case FINGER_COMMAND_REGIST_SECOND://指纹注册第二步结果
+            case FingerPrintTools.FINGER_COMMAND_REGIST_SECOND://指纹注册第二步结果
                 this.processRegistSecondCommand();
                 break;
-            case FINGER_COMMAND_REGIST_THIRD: //指纹注册第三步结果
+            case FingerPrintTools.FINGER_COMMAND_REGIST_THIRD: //指纹注册第三步结果
                 this.processRegistThirdCommand();
                 break;
-            case FINGER_COMMAND_SEARCH_FINGER://查询所有已经注册的指纹
+            case FingerPrintTools.FINGER_COMMAND_SEARCH_FINGER://查询所有已经注册的指纹
                 this.processSearchFingerCommand();
                 break;
-            case FINGER_COMMAND_REGIST_REFUSE_REPEAT://设置拒绝重复注册
+            case FingerPrintTools.FINGER_COMMAND_REGIST_REFUSE_REPEAT://设置拒绝重复注册
                 this.processRefuseRepeatCommand();
                 break;
-            case FINGER_COMMAND_REGIST_HAND_DETECTION://设置抬手检测
+            case FingerPrintTools.FINGER_COMMAND_REGIST_HAND_DETECTION://设置抬手检测
                 this.processHandDetectionCommand();
                 break;
             default:
@@ -458,7 +463,7 @@ public class FingerPrintManager implements PWSerialPortListener {
     private void uplaodFinger() throws IOException {
         String filePath = this.fileList.get(this.currentIndex);
         PWLogger.d("指纹上传开始:" + filePath);
-        this.sendCommand(FingerPrintCommond.FINGER_COMMAND_UPLOAD, 8195);
+        this.sendCommand(FingerPrintTools.FINGER_COMMAND_UPLOAD, 8195);
         InputStream stream = new FileInputStream(filePath);
         while (stream.available() > 0) {
             byte[] data = null;
@@ -490,7 +495,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         } else {
             PWLogger.d("指纹上传完毕");
             this.fireUploadSuccessed();
-            this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+            this.changeFingerPrintState(FINGER_STATE_COMPARE);
         }
     }
 
@@ -520,7 +525,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         } else {
             PWLogger.d("指纹上传失败");
             this.fireUploadFailured();
-            this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+            this.changeFingerPrintState(FINGER_STATE_COMPARE);
         }
     }
 
@@ -538,7 +543,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.buffer.discardReadBytes();
         if (status == 0x08) {
             PWLogger.d("指纹比对超时");
-            this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+            this.changeFingerPrintState(FINGER_STATE_COMPARE);
         } else if (status == 0x18) {
             PWLogger.d("指纹比对中断");
             this.operationInterrupted();
@@ -550,7 +555,7 @@ public class FingerPrintManager implements PWSerialPortListener {
                 PWLogger.d("指纹比对成功");
                 this.fireFingerRecognized(finger);
             }
-            this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+            this.changeFingerPrintState(FINGER_STATE_COMPARE);
         }
     }
 
@@ -581,7 +586,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         } else {
             PWLogger.d("指纹下载失败");
             this.fireDownloadFailured();
-            this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+            this.changeFingerPrintState(FINGER_STATE_COMPARE);
         }
     }
 
@@ -590,7 +595,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.buffer.discardReadBytes();
         PWLogger.d("指纹注册第二步开始");
         this.fireRegistStepChanged(2);
-        this.handler.sendEmptyMessageDelayed(FingerPrintCommond.FINGER_COMMAND_REGIST_SECOND.value, 1000);
+        this.handler.sendEmptyMessageDelayed(FingerPrintTools.FINGER_COMMAND_REGIST_SECOND, 1000);
     }
 
     private void processRegistSecondCommand() {
@@ -598,7 +603,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.buffer.discardReadBytes();
         this.fireRegistStepChanged(3);
         PWLogger.d("指纹注册第三步开始");
-        this.handler.sendEmptyMessageDelayed(FingerPrintCommond.FINGER_COMMAND_REGIST_THIRD.value, 1000);
+        this.handler.sendEmptyMessageDelayed(FingerPrintTools.FINGER_COMMAND_REGIST_THIRD, 1000);
     }
 
     private void processRegistThirdCommand() {
@@ -607,7 +612,7 @@ public class FingerPrintManager implements PWSerialPortListener {
         int status = this.buffer.readByte();
         this.buffer.skipBytes(3);
         this.buffer.discardReadBytes();
-        this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+        this.changeFingerPrintState(FINGER_STATE_COMPARE);
         if (status == 0x00) {//注册成功
             PWLogger.d("指纹注册成功");
             this.fireRegistSuccessed(finger);
@@ -645,27 +650,27 @@ public class FingerPrintManager implements PWSerialPortListener {
         this.currentIndex++;
         if (this.currentIndex < this.fingerList.size()) {
             int finger = this.fingerList.get(this.currentIndex);
-            if (this.state == FingerPrintState.FINGER_STATE_DOWNLOAD) {
+            if (this.state == FINGER_STATE_DOWNLOAD) {
                 PWLogger.d("指纹下载开始：" + finger);
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_DOWNLOAD, finger);
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_DOWNLOAD, finger);
             } else {
                 if (this.isFingerValid(finger)) {
                     PWLogger.d("发现已绑定用户指纹：" + finger);
                     this.processFingerList();
                 } else {
                     PWLogger.d("删除未绑定用户指纹：" + finger);
-                    this.sendCommand(FingerPrintCommond.FINGER_COMMAND_DELETE, finger);
+                    this.sendCommand(FingerPrintTools.FINGER_COMMAND_DELETE, finger);
                 }
             }
         } else {
-            if (this.state == FingerPrintState.FINGER_STATE_REGIST) {
+            if (this.state == FINGER_STATE_REGIST) {
                 PWLogger.d("指纹注册第一步开始");
                 this.fireRegistStepChanged(1);
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_FIRST);
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_REGIST_FIRST);
             } else {
                 PWLogger.d("指纹下载完毕");
                 this.fireDownloadSuccessed();
-                this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+                this.changeFingerPrintState(FINGER_STATE_COMPARE);
             }
         }
     }
@@ -688,14 +693,14 @@ public class FingerPrintManager implements PWSerialPortListener {
         } else {
             PWLogger.d("无已注册指纹");
             this.buffer.discardReadBytes();
-            if (this.state == FingerPrintState.FINGER_STATE_REGIST) {
+            if (this.state == FINGER_STATE_REGIST) {
                 PWLogger.d("指纹注册第一步开始");
                 this.fireRegistStepChanged(1);
-                this.sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_FIRST);
-            } else if (this.state == FingerPrintState.FINGER_STATE_DOWNLOAD) {
+                this.sendCommand(FingerPrintTools.FINGER_COMMAND_REGIST_FIRST);
+            } else if (this.state == FINGER_STATE_DOWNLOAD) {
                 PWLogger.d("无可下载的指纹特征");
                 this.fireNoFingerExist();
-                this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+                this.changeFingerPrintState(FINGER_STATE_COMPARE);
             }
         }
     }
@@ -703,14 +708,14 @@ public class FingerPrintManager implements PWSerialPortListener {
     private void processRefuseRepeatCommand() {
         this.buffer.skipBytes(8);
         this.buffer.discardReadBytes();
-        this.changeFingerPrintState(FingerPrintState.FINGER_STATE_COMPARE);
+        this.changeFingerPrintState(FINGER_STATE_COMPARE);
     }
 
     private void processHandDetectionCommand() {
         this.buffer.skipBytes(8);
         this.buffer.discardReadBytes();
         PWLogger.d("查询所有已注册指纹");
-        this.sendCommand(FingerPrintCommond.FINGER_COMMAND_SEARCH_FINGER);
+        this.sendCommand(FingerPrintTools.FINGER_COMMAND_SEARCH_FINGER);
     }
 
 
@@ -724,18 +729,18 @@ public class FingerPrintManager implements PWSerialPortListener {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 0x0c:
-                    if (state == FingerPrintState.FINGER_STATE_COMPARE) {
-                        sendCommand(FingerPrintCommond.FINGER_COMMAND_COMPARE);
+                    if (state == FINGER_STATE_COMPARE) {
+                        sendCommand(FingerPrintTools.FINGER_COMMAND_COMPARE);
                     }
                     break;
                 case 0x02:
-                    if (state == FingerPrintState.FINGER_STATE_REGIST) {
-                        sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_SECOND);
+                    if (state == FINGER_STATE_REGIST) {
+                        sendCommand(FingerPrintTools.FINGER_COMMAND_REGIST_SECOND);
                     }
                     break;
                 case 0x03:
-                    if (state == FingerPrintState.FINGER_STATE_REGIST) {
-                        sendCommand(FingerPrintCommond.FINGER_COMMAND_REGIST_THIRD);
+                    if (state == FINGER_STATE_REGIST) {
+                        sendCommand(FingerPrintTools.FINGER_COMMAND_REGIST_THIRD);
                     }
                     break;
             }

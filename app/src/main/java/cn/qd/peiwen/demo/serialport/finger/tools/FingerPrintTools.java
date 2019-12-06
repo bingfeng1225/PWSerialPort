@@ -1,6 +1,5 @@
 package cn.qd.peiwen.demo.serialport.finger.tools;
 
-import cn.qd.peiwen.demo.serialport.finger.types.FingerPrintCommond;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.ThreadUtils;
@@ -10,6 +9,20 @@ import io.netty.buffer.Unpooled;
 
 
 public class FingerPrintTools {
+    public static final int FINGER_COMMAND_NONE = 0x00;
+    public static final int FINGER_COMMAND_CLEAR = 0x05;
+    public static final int FINGER_COMMAND_BREAK = 0xFE;
+    public static final int FINGER_COMMAND_DELETE = 0x04;
+    public static final int FINGER_COMMAND_UPLOAD = 0x41;
+    public static final int FINGER_COMMAND_COMPARE = 0x0C;
+    public static final int FINGER_COMMAND_DOWNLOAD = 0x31;
+    public static final int FINGER_COMMAND_REGIST_FIRST = 0x01;
+    public static final int FINGER_COMMAND_REGIST_THIRD = 0x03;
+    public static final int FINGER_COMMAND_REGIST_SECOND = 0x02;
+    public static final int FINGER_COMMAND_SEARCH_FINGER = 0x2B;
+    public static final int FINGER_COMMAND_REGIST_REFUSE_REPEAT= 0x2D;
+    public static final int FINGER_COMMAND_REGIST_HAND_DETECTION = 0x3F;
+
     private static final String FINGER_RESET_ON = "1";
     private static final String FINGER_RESET_OFF = "0";
     private static final String FINGER_RESET_USB = "/sys/kernel/finger_set/usb_value";
@@ -38,10 +51,10 @@ public class FingerPrintTools {
         PWSerialPort.writeFile(FINGER_RESET_USB, FINGER_RESET_ON);
     }
 
-    public static byte[] createFingerCommand(FingerPrintCommond type, int param) {
+    public static byte[] createFingerCommand(int type, int param) {
         ByteBuf buffer = Unpooled.buffer(8);
         buffer.writeByte(0xF5);
-        buffer.writeByte(type.value);
+        buffer.writeByte(type);
         switch (type) {
             case FINGER_COMMAND_CLEAR:
             case FINGER_COMMAND_BREAK:

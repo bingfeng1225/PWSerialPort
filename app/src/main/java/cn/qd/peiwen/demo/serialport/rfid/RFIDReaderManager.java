@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteOrder;
 
-import cn.qd.peiwen.demo.serialport.rfid.listener.RFIDReaderListener;
 import cn.qd.peiwen.demo.serialport.rfid.tools.RFIDReaderTools;
-import cn.qd.peiwen.demo.serialport.rfid.types.RFIDReaderCommond;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -143,29 +141,11 @@ public class RFIDReaderManager implements PWSerialPortListener {
         }
     }
 
-    private void sendCommand(RFIDReaderCommond type) {
+    private void sendCommand(int type) {
         if (this.isReady()) {
             byte[] data = RFIDReaderTools.createFingerCommand(type);
             PWLogger.d("指令发送：" + ByteUtils.bytes2HexString(data));
             this.helper.write(data);
-        }
-    }
-
-    private void fireRFIDReaderReady() {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onRFIDReaderReady();
-        }
-    }
-
-    private void fireRFIDReaderException() {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onRFIDReaderException();
-        }
-    }
-
-    private void fireRFIDReaderRecognized(long id, String card) {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onRFIDReaderRecognized(id, card);
         }
     }
 
@@ -185,11 +165,11 @@ public class RFIDReaderManager implements PWSerialPortListener {
         if (!checkHelper(helper)) {
             return;
         }
-        this.fireRFIDReaderException();
-        if (this.enabled) {
-            if (!"magton".equals(Build.MODEL)) {
-                RFIDReaderTools.resetRFIDReader();
-            }
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onRFIDReaderException();
+        }
+        if (this.enabled && !"magton".equals(Build.MODEL)) {
+            RFIDReaderTools.resetRFIDReader();
         }
     }
 
@@ -204,7 +184,9 @@ public class RFIDReaderManager implements PWSerialPortListener {
             byte mark = this.buffer.readByte();
             if (mark == 0x06) {
                 this.ready = true;
-                this.fireRFIDReaderReady();
+                if (EmptyUtils.isNotEmpty(this.listener)) {
+                    this.listener.get().onRFIDReaderReady();
+                }
                 if (this.buffer.readableBytes() == 0) {
                     this.buffer.discardReadBytes();
                 } else {
@@ -267,10 +249,11 @@ public class RFIDReaderManager implements PWSerialPortListener {
 
         long id = ByteUtils.bytes2Long(data, ByteOrder.LITTLE_ENDIAN);
         String card = ByteUtils.bytes2HexString(data, 0, length);
-        this.fireRFIDReaderRecognized(id, card);
-
         this.buffer.skipBytes(2);
         this.buffer.discardReadBytes();
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onRFIDReaderRecognized(id, card);
+        }
     }
 
     private class RFIDHandler extends Handler {
@@ -289,10 +272,10 @@ public class RFIDReaderManager implements PWSerialPortListener {
                     } else {
                         sendEmptyMessageDelayed(1, 1000);
                     }
-                    sendCommand(RFIDReaderCommond.RFID_COMMAND_UART);
+                    sendCommand(RFIDReaderTools.RFID_COMMAND_UART);
                     break;
                 case 1:
-                    sendCommand(RFIDReaderCommond.RFID_COMMAND_READ);
+                    sendCommand(RFIDReaderTools.RFID_COMMAND_READ);
                     break;
             }
         }

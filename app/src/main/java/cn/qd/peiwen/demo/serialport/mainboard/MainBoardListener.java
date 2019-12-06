@@ -1,10 +1,9 @@
-package cn.qd.peiwen.demo.serialport.mainboard.listener;
+package cn.qd.peiwen.demo.serialport.mainboard;
 
 public interface MainBoardListener {
     void onMainBoardReady();
     void onMainBoardException();
     void onSystemTypeChanged(int type);
-    byte[] requestStateReply(byte[] data);
-    byte[] requestCommandReply(int type);
     void onStateDataReceived(byte[] data);
+    byte[] requestCommandResponse(int type);
 }

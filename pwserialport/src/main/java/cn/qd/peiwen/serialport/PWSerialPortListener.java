@@ -8,5 +8,5 @@ public interface PWSerialPortListener {
 
     void onException(PWSerialPortHelper helper);
 
-    void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException;
+    void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException;
 }

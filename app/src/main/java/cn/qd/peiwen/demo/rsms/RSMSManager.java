@@ -30,7 +30,7 @@ public class RSMSManager implements PWSerialPortListener {
         return manager;
     }
 
-    public void init(IRSMSListener listener){
+    public void init(IRSMSListener listener) {
         createBuffer();
         createHelper();
         this.listener = new WeakReference<>(listener);
@@ -50,7 +50,11 @@ public class RSMSManager implements PWSerialPortListener {
         }
     }
 
-    public void release(){
+    public void changeModel() {//配置模式  工作模式
+
+    }
+
+    public void release() {
         this.destoryHelper();
         this.destoryBuffer();
     }
@@ -80,8 +84,8 @@ public class RSMSManager implements PWSerialPortListener {
 
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
-            this.helper = new PWSerialPortHelper("RFIDManager");
-            this.helper.setTimeout(2);
+            this.helper = new PWSerialPortHelper("RSMSManager");
+            this.helper.setTimeout(3);
             if ("magton".equals(Build.MODEL)) {
                 this.helper.setPath("/dev/ttyS5");
             } else {
@@ -101,22 +105,28 @@ public class RSMSManager implements PWSerialPortListener {
 
     @Override
     public void onConnected(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
+        //TODO 查询设备状态
+        //TODO 发送查询状态指令
     }
 
     @Override
     public void onException(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
+        //报故障
     }
 
     @Override
-    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
+        //TODO 拆包处理不同信息回复
+
+
     }
 }

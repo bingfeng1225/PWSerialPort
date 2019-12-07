@@ -147,7 +147,7 @@ public class RFIDManager implements PWSerialPortListener {
 
     @Override
     public void onConnected(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         this.times = 0;
@@ -158,7 +158,7 @@ public class RFIDManager implements PWSerialPortListener {
 
     @Override
     public void onException(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         if (EmptyUtils.isNotEmpty(this.listener)) {
@@ -170,11 +170,11 @@ public class RFIDManager implements PWSerialPortListener {
     }
 
     @Override
-    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
-        this.buffer.writeBytes(buffer, 0, buffer.length);
+        this.buffer.writeBytes(buffer, 0, length);
         if (!this.ready) {
             this.buffer.markReaderIndex();
             byte mark = this.buffer.readByte();

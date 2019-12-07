@@ -135,6 +135,13 @@ public class LTFManager implements PWSerialPortListener {
         }
     }
 
+    private void write(byte[] data) {
+        if (this.isInitialized()) {
+            this.helper.writeAndFlush(data);
+            PWLogger.d("指令发送:" + ByteUtils.bytes2HexString(data, true, ", "));
+        }
+    }
+
     private void switchReadModel() {
         if (!"magton".equals(Build.MODEL)) {
             PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", "1");
@@ -148,13 +155,6 @@ public class LTFManager implements PWSerialPortListener {
             PWSerialPort.writeFile("/sys/class/gpio/gpio24/value", "0");
         } else {
             PWSerialPort.writeFile("/sys/class/misc/sunxi-acc/acc/sochip_acc", "1");
-        }
-    }
-
-    private void sendCommand(byte[] data) {
-        if (this.isInitialized()) {
-            this.helper.write(data);
-            PWLogger.d("指令发送:" + ByteUtils.bytes2HexString(data, true, ", "));
         }
     }
 
@@ -257,28 +257,28 @@ public class LTFManager implements PWSerialPortListener {
         return -1;
     }
 
-    private void stateDataReceived(byte[] data){
-        this.sendCommand(LTFTools.makeStateResponse(data));
+    private void stateDataReceived(byte[] data) {
+        this.write(LTFTools.makeStateResponse(data));
         this.switchReadModel();
-        if(EmptyUtils.isNotEmpty(this.listener)){
+        if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onStateDataReceived(data);
         }
     }
 
-    private void requestCommandReceived(int model){
-        byte[] reply = null;
-        if(EmptyUtils.isNotEmpty(this.listener)) {
-            reply = this.listener.get().requestCommandResponse(model);
+    private void requestCommandReceived(int model) {
+        byte[] response = null;
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            response = this.listener.get().requestCommandResponse(model);
         }
-        if (EmptyUtils.isNotEmpty(reply)) {
-            sendCommand(reply);
+        if (EmptyUtils.isNotEmpty(response)) {
+            write(response);
         }
         this.switchReadModel();
     }
 
     @Override
     public void onConnected(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         this.buffer.clear();
@@ -291,7 +291,7 @@ public class LTFManager implements PWSerialPortListener {
 
     @Override
     public void onException(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         if (EmptyUtils.isNotEmpty(this.listener)) {
@@ -300,11 +300,11 @@ public class LTFManager implements PWSerialPortListener {
     }
 
     @Override
-    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
-        this.buffer.writeBytes(buffer, 0, buffer.length);
+        this.buffer.writeBytes(buffer, 0, length);
         while (this.buffer.readableBytes() >= 2) {
             byte system = this.buffer.getByte(0);
             byte command = this.buffer.getByte(1);
@@ -368,7 +368,7 @@ public class LTFManager implements PWSerialPortListener {
                     requestCommandReceived(msg.arg1);
                     break;
                 }
-                case 0x04:{
+                case 0x04: {
                     switchReadModel();
                     break;
                 }

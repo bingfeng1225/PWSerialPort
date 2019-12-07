@@ -31,7 +31,7 @@ public class HUBController implements PWSerialPortListener {
     }
 
     public void reset() {
-        if(EmptyUtils.isNotEmpty(this.helper)){
+        if (EmptyUtils.isNotEmpty(this.helper)) {
             byte[] data = {(byte) 0xAF, (byte) 0xA6, 0x01, 0x01, 0x00, 0x57};
             this.helper.write(data);
         }
@@ -55,7 +55,7 @@ public class HUBController implements PWSerialPortListener {
     }
 
     @Override
-    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
+    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException {
         PWLogger.d("HUBController byte received");
     }
 }

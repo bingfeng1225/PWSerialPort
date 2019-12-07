@@ -135,6 +135,17 @@ public class PWSerialPortHelper {
         try {
             if (isWriteable()) {
                 this.serialPort.outputStream().write(bytes);
+            }
+        } catch (IOException e) {
+            PWLogger.d(e);
+            this.onException();
+        }
+    }
+
+    public synchronized void writeAndFlush(byte[] bytes){
+        try {
+            if (isWriteable()) {
+                this.serialPort.outputStream().write(bytes);
                 this.serialPort.outputStream().flush();
                 this.serialPort.outputStream().getFD().sync();
             }
@@ -201,8 +212,10 @@ public class PWSerialPortHelper {
     private synchronized void onOpen() {
         this.createSerialPort();
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
-            this.fireConnected();
             this.createReadThread();
+            if (EmptyUtils.isNotEmpty(this.listener)) {
+                this.listener.get().onConnected(this);
+            }
         } else {
             this.onException();
         }
@@ -212,7 +225,9 @@ public class PWSerialPortHelper {
         this.destoryReadThread();
         this.destorySerialPort();
         if (!isClosed() && !isReleased()) {
-            this.fireException();
+            if (EmptyUtils.isNotEmpty(this.listener)) {
+                this.listener.get().onException(this);
+            }
             this.phandler.sendEmptyMessageDelayed(PW_SERIAL_PORT_STATE_OPENED, 3000);
         }
     }
@@ -226,24 +241,6 @@ public class PWSerialPortHelper {
         this.destoryReadThread();
         this.destorySerialPort();
         this.destoryProcessHandler();
-    }
-
-    private void fireConnected() {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onConnected(this);
-        }
-    }
-
-    private void fireException() {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onException(this);
-        }
-    }
-
-    private void fireByteReceived(byte[] data) throws IOException {
-        if (EmptyUtils.isNotEmpty(this.listener)) {
-            this.listener.get().onByteReceived(this, data);
-        }
     }
 
     private void changeSerialProtState(int state) {
@@ -374,9 +371,9 @@ public class PWSerialPortHelper {
                         break;
                     }
                     int length = serialPort.inputStream().read(buffer);
-                    byte[] data = new byte[length];
-                    System.arraycopy(buffer, 0, data, 0, length);
-                    PWSerialPortHelper.this.fireByteReceived(data);
+                    if (EmptyUtils.isNotEmpty(listener)) {
+                        listener.get().onByteReceived(PWSerialPortHelper.this, buffer, length);
+                    }
                 }
             } catch (Exception e) {
                 PWLogger.d(e);

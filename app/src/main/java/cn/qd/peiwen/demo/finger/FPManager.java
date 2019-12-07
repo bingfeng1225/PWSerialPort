@@ -553,7 +553,7 @@ public class FPManager implements PWSerialPortListener {
 
     @Override
     public void onConnected(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         this.ready = false;
@@ -563,7 +563,7 @@ public class FPManager implements PWSerialPortListener {
 
     @Override
     public void onException(PWSerialPortHelper helper) {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         if (EmptyUtils.isNotEmpty(this.listener)) {
@@ -595,8 +595,8 @@ public class FPManager implements PWSerialPortListener {
     }
 
     @Override
-    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer) throws IOException {
-        if(!this.isInitialized() || !helper.equals(this.helper))   {
+    public void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException {
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
         if (!this.ready) {
@@ -605,7 +605,7 @@ public class FPManager implements PWSerialPortListener {
                 this.listener.get().onFingerPrintReady();
             }
         }
-        this.buffer.writeBytes(buffer, 0, buffer.length);
+        this.buffer.writeBytes(buffer, 0, length);
         if (this.buffer.readableBytes() < 8) {
             return;
         }

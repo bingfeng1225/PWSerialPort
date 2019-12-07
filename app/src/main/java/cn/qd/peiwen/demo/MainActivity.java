@@ -16,12 +16,14 @@ import cn.qd.peiwen.demo.bean.MainBoardEntity;
 import cn.qd.peiwen.demo.refriger.ILTFListener;
 import cn.qd.peiwen.demo.rfid.RFIDManager;
 import cn.qd.peiwen.demo.rfid.IRFIDListener;
+import cn.qd.peiwen.demo.rsms.IRSMSListener;
+import cn.qd.peiwen.demo.rsms.RSMSManager;
 import cn.qd.peiwen.pwlogger.PWLogger;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 
-public class MainActivity extends AppCompatActivity implements ILTFListener, IRFIDListener, IFPListener {
+public class MainActivity extends AppCompatActivity implements ILTFListener, IRFIDListener, IFPListener, IRSMSListener {
     private MainBoardEntity entity;
 
     @Override
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements ILTFListener, IRF
         LTFManager.getInstance().init(this);
         RFIDManager.getInstance().init(this);
         FPManager.getInstance().init(this);
+        RSMSManager.getInstance().init(this);
     }
 
     @Override
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements ILTFListener, IRF
         LTFManager.getInstance().release();
         RFIDManager.getInstance().release();
         FPManager.getInstance().release();
+        RSMSManager.getInstance().release();
     }
 
     public void onClicked(View view) {
@@ -79,6 +83,12 @@ public class MainActivity extends AppCompatActivity implements ILTFListener, IRF
                 break;
             case R.id.close_main:
                 LTFManager.getInstance().disable();
+                break;
+            case R.id.open_rsms:
+                RSMSManager.getInstance().enable();
+                break;
+            case R.id.close_rsms:
+                RSMSManager.getInstance().disable();
                 break;
         }
     }

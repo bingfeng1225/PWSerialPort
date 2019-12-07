@@ -137,7 +137,7 @@ public class RFIDManager implements PWSerialPortListener {
         }
     }
 
-    private void sendCommand(int type) {
+    private void write(int type) {
         if (this.isInitialized()) {
             byte[] data = RFIDTools.createFingerCommand(type);
             PWLogger.d("指令发送：" + ByteUtils.bytes2HexString(data));
@@ -268,10 +268,10 @@ public class RFIDManager implements PWSerialPortListener {
                     } else {
                         sendEmptyMessageDelayed(1, 1000);
                     }
-                    sendCommand(RFIDTools.RFID_COMMAND_UART);
+                    write(RFIDTools.RFID_COMMAND_UART);
                     break;
                 case 1:
-                    sendCommand(RFIDTools.RFID_COMMAND_READ);
+                    write(RFIDTools.RFID_COMMAND_READ);
                     break;
             }
         }

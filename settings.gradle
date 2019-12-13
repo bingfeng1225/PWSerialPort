@@ -1,2 +1,2 @@
-include ':app', ':pwserialport'
+include ':app', ':pwserialport', ':hbmserialport'
 rootProject.name='PWSerialPort'

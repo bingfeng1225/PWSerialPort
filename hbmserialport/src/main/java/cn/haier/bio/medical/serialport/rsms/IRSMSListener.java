@@ -10,6 +10,8 @@ public interface IRSMSListener {
     void onRSMSReady();
     void onRSMSConnected();
     void onRSMSException();
+    void onMessageSended(String data);
+    void onMessageRecved(String data);
     void onRSMSStatusChanged(RSMSStatusEntity status);
     void onRSMSNetworChanged(RSMSNetworkEntity network);
     void onRSMSModulesChanged(RSMSModulesEntity modules);

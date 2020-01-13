@@ -1,5 +1,6 @@
 package cn.haier.bio.medical.serialport.rsms;
 
+import cn.haier.bio.medical.serialport.rsms.entity.send.IRSMSSendEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigEntity;
 import cn.qd.peiwen.pwtools.EmptyUtils;
 
@@ -77,15 +78,27 @@ public class RSMSManager {
         }
     }
 
-    public void enterConfigModel() {
+    public void enterDCEConfigModel() {
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
-            this.serialPort.enterConfigModel();
+            this.serialPort.enterConfigModel(false);
+        }
+    }
+
+    public void enterPDAConfigModel() {
+        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+            this.serialPort.enterConfigModel(true);
         }
     }
 
     public void configNetwork(RSMSConfigEntity entity) {
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
             this.serialPort.configNetwork(entity);
+        }
+    }
+
+    public void collectionDeviceData(IRSMSSendEntity entity) {
+        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+            this.serialPort.collectionDeviceData(entity);
         }
     }
 

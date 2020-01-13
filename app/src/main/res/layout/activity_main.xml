@@ -4,319 +4,121 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@mipmap/fragment_bg"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="20dp"
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/board_radius"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <Button
+            android:id="@+id/query_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/board_radius"
-            android:orientation="vertical">
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="查询模块状态" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/colorAccent"
-                android:text="主控板"
-                android:textAlignment="center"
-                android:textColor="@android:color/white"
-                android:textSize="18sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/open_main"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:layout_weight="1"
-                    android:onClick="onClicked"
-                    android:text="OPEN" />
-
-                <Button
-                    android:id="@+id/close_main"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:layout_weight="1"
-                    android:onClick="onClicked"
-                    android:text="CLOSE" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
+        <Button
+            android:id="@+id/query_network"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:background="@drawable/board_radius"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/colorAccent"
-                android:text="读卡器"
-                android:textAlignment="center"
-                android:textColor="@android:color/white"
-                android:textSize="18sp" />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="查询联网参数" />
 
-                <Button
-                    android:id="@+id/open_rfid"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:layout_weight="1"
-                    android:onClick="onClicked"
-                    android:text="OPEN" />
+        <Button
+            android:id="@+id/query_modules"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="查询模块参数" />
 
-                <Button
-                    android:id="@+id/close_rfid"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:layout_weight="1"
-                    android:onClick="onClicked"
-                    android:text="CLOSE" />
-            </LinearLayout>
-        </LinearLayout>
+
+        <Button
+            android:id="@+id/enter_dce_config"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="进入DCE配置" />
+
+        <Button
+            android:id="@+id/enter_pda_config"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="进入PDA配置" />
+
+        <Button
+            android:id="@+id/quit_config"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="退出配置模式" />
+
+        <Button
+            android:id="@+id/config_network"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="配置网络参数" />
+
+
+        <Button
+            android:id="@+id/clear_cache"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="清楚本地缓存" />
+
+        <Button
+            android:id="@+id/recovery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="恢复出厂设置" />
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/board_radius"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/board_radius">
         <TextView
+            android:id="@+id/text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorAccent"
-            android:text="指纹"
-            android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:textSize="18sp" />
-
-        <LinearLayout
+            android:background="@android:color/white"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:layout_weight="1" />
+        <Button
+            android:id="@+id/clear"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/open_finger"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:onClick="onClicked"
-                android:text="OPEN" />
-
-            <Button
-                android:id="@+id/regist"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:onClick="onClicked"
-                android:text="REGIST" />
-
-            <Button
-                android:id="@+id/download"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:onClick="onClicked"
-                android:text="DOWNLOAD" />
-
-            <Button
-                android:id="@+id/upload"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:onClick="onClicked"
-                android:text="UPLOAD" />
-
-            <Button
-                android:id="@+id/close_finger"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:onClick="onClicked"
-                android:text="CLOSE" />
-        </LinearLayout>
-
+            android:layout_margin="10dp"
+            android:onClick="onClicked"
+            android:text="清空数据记录" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/board_radius"
-        android:orientation="vertical">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorAccent"
-            android:text="物联板"
-            android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:textSize="18sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/board_radius"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@color/colorAccent"
-                    android:gravity="center"
-                    android:text="开关"
-                    android:textAlignment="center"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp" />
-                <Button
-                    android:id="@+id/open_rsms"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="OPEN" />
-                <Button
-                    android:id="@+id/close_rsms"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="CLOSE" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/board_radius"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@color/colorAccent"
-                    android:gravity="center"
-                    android:text="查询"
-                    android:textAlignment="center"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp" />
-                <Button
-                    android:id="@+id/query_status"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="STATUS" />
-
-                <Button
-                    android:id="@+id/query_network"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="NETWORK" />
-
-                <Button
-                    android:id="@+id/query_modules"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="MODULES" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/board_radius"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@color/colorAccent"
-                    android:gravity="center"
-                    android:text="配置"
-                    android:textAlignment="center"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp" />
-                <Button
-                    android:id="@+id/config_enter"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="ENTER" />
-
-                <Button
-                    android:id="@+id/config_quit"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="QUIT" />
-
-                <Button
-                    android:id="@+id/config_network"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="NETWORK" />
-
-                <Button
-                    android:id="@+id/config_recovery"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="RECOVERY" />
-
-                <Button
-                    android:id="@+id/config_clear"
-                    android:layout_width="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:onClick="onClicked"
-                    android:text="CLEAR" />
-            </LinearLayout>
-
-
-
-        </LinearLayout>
-
-    </LinearLayout>
 </LinearLayout>

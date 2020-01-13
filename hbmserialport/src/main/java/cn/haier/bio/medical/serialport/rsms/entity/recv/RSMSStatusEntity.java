@@ -1,13 +1,13 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
 public class RSMSStatusEntity {
-    private byte[] mcu; //MCU识别码
     private byte model; //联网模式
-    private String imei;//IMEI号
     private byte status;//模块状态码
     private byte encode;//编码规则状态码
     private byte level; //4G信号强度
     private byte wifiLevel; //WIFI信号强度
+    private short uploadFrequency;//上传频率
+    private short acquisitionFrequency;//采集频率
     private byte year; //年
     private byte month;//月
     private byte day;//日
@@ -19,28 +19,12 @@ public class RSMSStatusEntity {
 
     }
 
-    public byte[] getMcu() {
-        return mcu;
-    }
-
-    public void setMcu(byte[] mcu) {
-        this.mcu = mcu;
-    }
-
     public byte getModel() {
         return model;
     }
 
     public void setModel(byte model) {
         this.model = model;
-    }
-
-    public String getImei() {
-        return imei;
-    }
-
-    public void setImei(String imei) {
-        this.imei = imei;
     }
 
     public byte getStatus() {
@@ -73,6 +57,22 @@ public class RSMSStatusEntity {
 
     public void setWifiLevel(byte wifiLevel) {
         this.wifiLevel = wifiLevel;
+    }
+
+    public short getUploadFrequency() {
+        return uploadFrequency;
+    }
+
+    public void setUploadFrequency(short uploadFrequency) {
+        this.uploadFrequency = uploadFrequency;
+    }
+
+    public short getAcquisitionFrequency() {
+        return acquisitionFrequency;
+    }
+
+    public void setAcquisitionFrequency(short acquisitionFrequency) {
+        this.acquisitionFrequency = acquisitionFrequency;
     }
 
     public byte getYear() {

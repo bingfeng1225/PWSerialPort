@@ -1,6 +1,5 @@
 package cn.haier.bio.medical.serialport.rsms;
 
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -15,6 +14,8 @@ import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSStatusEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.IRSMSSendEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigModelEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSQueryStatusEntity;
 import cn.haier.bio.medical.serialport.rsms.tools.RSMSTools;
 import cn.haier.bio.medical.serialport.tools.ByteBufTools;
 import cn.qd.peiwen.pwlogger.PWLogger;
@@ -45,7 +46,7 @@ public class RSMSSerialPort implements PWSerialPortListener {
         createHandler();
         createBuffer();
         createHelper();
-        this.mac = mac;
+        this.mac = RSMSTools.generateMac(mac);
         this.code = RSMSTools.generateCode(code);
         this.listener = new WeakReference<>(listener);
     }
@@ -65,7 +66,11 @@ public class RSMSSerialPort implements PWSerialPortListener {
     }
 
     public void queryStatus() {
-        this.sendCommand(RSMSTools.RSMS_COMMAND_QUERY_STATUS);
+        RSMSQueryStatusEntity entity = new RSMSQueryStatusEntity();
+        entity.setMac(this.mac);
+        entity.setCode(this.code);
+        entity.setMcu(RSMSTools.DEFAULT_MAC);
+        this.sendCommand(RSMSTools.RSMS_COMMAND_QUERY_STATUS, entity);
     }
 
     public void queryNetwork() {
@@ -88,12 +93,16 @@ public class RSMSSerialPort implements PWSerialPortListener {
         this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_QUIT);
     }
 
-    public void enterConfigModel() {
-        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_ENTER);
+    public void enterConfigModel(boolean pda) {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_ENTER,new RSMSConfigModelEntity(pda));
     }
 
     public void configNetwork(RSMSConfigEntity entity) {
         this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_NETWORK, entity);
+    }
+
+    public void collectionDeviceData(IRSMSSendEntity entity) {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_COLLECTION_DATA,entity);
     }
 
     public void release() {
@@ -131,12 +140,8 @@ public class RSMSSerialPort implements PWSerialPortListener {
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
             this.helper = new PWSerialPortHelper("RSMSManager");
-            this.helper.setTimeout(3);
-            if ("magton".equals(Build.MODEL)) {
-                this.helper.setPath("/dev/ttyS5");
-            } else {
-                this.helper.setPath("/dev/ttyS1");
-            }
+            this.helper.setTimeout(0);
+            this.helper.setPath("/dev/ttyS1");
             this.helper.setBaudrate(115200);
             this.helper.init(this);
         }
@@ -165,21 +170,24 @@ public class RSMSSerialPort implements PWSerialPortListener {
         }
     }
 
-    private void write(byte[] data) {
-        if (this.isInitialized() && this.enabled) {
-            PWLogger.d("指令发送:" + ByteUtils.bytes2HexString(data, true, ", "));
-            this.helper.write(data);
-        }
-    }
-
-
     private void sendCommand(int type) {
         this.sendCommand(type, null);
     }
 
     private void sendCommand(int type, IRSMSSendEntity entity) {
-        byte[] data = RSMSTools.packageCommand(type, this.code, this.mac, entity);
+        byte[] data = RSMSTools.packageCommand(type, entity);
         this.write(data);
+    }
+
+    private void write(byte[] data) {
+        String log = ByteUtils.bytes2HexString(data, true, ", ");
+        PWLogger.d("指令发送:" + log);
+        if (EmptyUtils.isNotEmpty(this.listener)) {
+            this.listener.get().onMessageSended(log);
+        }
+        if (this.isInitialized() && this.enabled) {
+            this.helper.write(data);
+        }
     }
 
     @Override
@@ -252,7 +260,11 @@ public class RSMSSerialPort implements PWSerialPortListener {
                 continue;
             }
             this.buffer.discardReadBytes();
-            PWLogger.d("指令接收:" + ByteUtils.bytes2HexString(data, true, ", "));
+            String log = ByteUtils.bytes2HexString(data, true, ", ");
+            PWLogger.d("指令接收:" + log);
+            if (EmptyUtils.isNotEmpty(this.listener)) {
+                this.listener.get().onMessageRecved(log);
+            }
             short type = this.buffer.getShort(4);
             switch (type) {
                 case RSMSTools.RSMS_RESPONSE_QUERY_STATUS: {
@@ -276,15 +288,68 @@ public class RSMSSerialPort implements PWSerialPortListener {
                     }
                     break;
                 }
-                case RSMSTools.RSMS_RESPONSE_CONFIG_ENTER:
-                case RSMSTools.RSMS_RESPONSE_CONFIG_QUIT:
-                case RSMSTools.RSMS_RESPONSE_CONFIG_NETWORK:
-                case RSMSTools.RSMS_RESPONSE_CONFIG_RECOVERY:
-                case RSMSTools.RSMS_RESPONSE_CONFIG_CLEAR_CACHE: {
+                case RSMSTools.RSMS_RESPONSE_CONFIG_ENTER:{
+                        RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                        if(0x01 == entity.getResponse()){
+                            PWLogger.d("进入配置模式成功");
+                        }else{
+                            PWLogger.d("进入配置模式失败");
+                        }
+                        if (EmptyUtils.isNotEmpty(this.listener)) {
+                            this.listener.get().onRSMSResponseChanged(type, entity);
+                        }
+                        break;
+                }
+                case RSMSTools.RSMS_RESPONSE_CONFIG_QUIT:{
                     RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    if(0x01 == entity.getResponse()){
+                        PWLogger.d("退出配置模式成功");
+                    }else{
+                        PWLogger.d("退出配置模式失败");
+                    }
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSResponseChanged(type, entity);
                     }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_CONFIG_NETWORK:{
+                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    if(0x01 == entity.getResponse()){
+                        PWLogger.d("配置网络参数成功");
+                    }else{
+                        PWLogger.d("配置网络参数失败");
+                    }
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSResponseChanged(type, entity);
+                    }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_CONFIG_RECOVERY:{
+                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    if(0x01 == entity.getResponse()){
+                        PWLogger.d("恢复出厂设置成功");
+                    }else{
+                        PWLogger.d("恢复出厂设置失败");
+                    }
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSResponseChanged(type, entity);
+                    }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_CONFIG_CLEAR_CACHE: {
+                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    if(0x01 == entity.getResponse()){
+                        PWLogger.d("清空缓存数据成功");
+                    }else{
+                        PWLogger.d("清空缓存数据失败");
+                    }
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSResponseChanged(type, entity);
+                    }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_COLLECTION_DATA: {
+                    PWLogger.d("数据采集成功");
                     break;
                 }
                 default:

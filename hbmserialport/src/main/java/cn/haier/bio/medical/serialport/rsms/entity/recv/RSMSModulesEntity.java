@@ -4,7 +4,6 @@ public class RSMSModulesEntity {
     private byte[] mcu; //MCU识别码
     private byte[] mac; //WIFI MAC
     private String code;//BE码
-    private byte model; //联网模式
     private String imei;//IMEI号
     private String iccid;//ICCID号
     private String phone;//SIM卡号码
@@ -38,14 +37,6 @@ public class RSMSModulesEntity {
 
     public void setCode(String code) {
         this.code = code;
-    }
-
-    public byte getModel() {
-        return model;
-    }
-
-    public void setModel(byte model) {
-        this.model = model;
     }
 
     public String getImei() {

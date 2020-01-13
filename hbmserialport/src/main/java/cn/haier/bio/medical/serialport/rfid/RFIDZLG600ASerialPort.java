@@ -31,6 +31,7 @@ public class RFIDZLG600ASerialPort implements PWSerialPortListener {
     private WeakReference<IRFIDZLG600AListener> listener;
 
     public RFIDZLG600ASerialPort() {
+
     }
 
     public void init(IRFIDZLG600AListener listener) {
@@ -150,6 +151,7 @@ public class RFIDZLG600ASerialPort implements PWSerialPortListener {
         if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
+        this.ready = false;
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRFIDZLG600AException();
         }

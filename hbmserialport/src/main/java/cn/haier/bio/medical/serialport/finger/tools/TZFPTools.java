@@ -7,7 +7,6 @@ import cn.qd.peiwen.serialport.PWSerialPort;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-
 public class TZFPTools {
     public static final int FINGER_COMMAND_CLEAR = 0x05;
     public static final int FINGER_COMMAND_BREAK = 0xFE;
@@ -106,5 +105,4 @@ public class TZFPTools {
         buffer.release();
         return data;
     }
-
 }

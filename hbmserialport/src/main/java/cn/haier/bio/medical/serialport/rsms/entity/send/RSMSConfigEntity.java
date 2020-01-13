@@ -12,13 +12,8 @@ import io.netty.buffer.Unpooled;
 public class RSMSConfigEntity implements IRSMSSendEntity {
     private byte model;
 
-    private String port;//4G端口
-    private String domain;//4G服务器域名
-    private String address;//4G服务器IP地址
-
-    private String wifiPort;//WIFI端口
-    private String wifiDomain;//WIFI服务器域名
-    private String wifiAddress;//WIFI服务器IP地址
+    private String port;//端口
+    private String address;//服务器域名/IP地址
 
     private String wifiName;//WIFI名称
     private String wifiPassword;//WIFI密码
@@ -47,44 +42,12 @@ public class RSMSConfigEntity implements IRSMSSendEntity {
         this.port = port;
     }
 
-    public String getDomain() {
-        return domain;
-    }
-
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
-
     public String getAddress() {
         return address;
     }
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public String getWifiPort() {
-        return wifiPort;
-    }
-
-    public void setWifiPort(String wifiPort) {
-        this.wifiPort = wifiPort;
-    }
-
-    public String getWifiDomain() {
-        return wifiDomain;
-    }
-
-    public void setWifiDomain(String wifiDomain) {
-        this.wifiDomain = wifiDomain;
-    }
-
-    public String getWifiAddress() {
-        return wifiAddress;
-    }
-
-    public void setWifiAddress(String wifiAddress) {
-        this.wifiAddress = wifiAddress;
     }
 
     public String getWifiName() {
@@ -131,12 +94,8 @@ public class RSMSConfigEntity implements IRSMSSendEntity {
     public byte[] packageSendMessage() {
         ByteBuf buffer = Unpooled.buffer();
         buffer.writeByte(model);
-        buffer.writeBytes(RSMSTools.packageString(domain));
         buffer.writeBytes(RSMSTools.packageString(address));
         buffer.writeBytes(RSMSTools.packageString(port));
-        buffer.writeBytes(RSMSTools.packageString(wifiDomain));
-        buffer.writeBytes(RSMSTools.packageString(wifiAddress));
-        buffer.writeBytes(RSMSTools.packageString(wifiPort));
         buffer.writeBytes(RSMSTools.packageString(wifiName));
         buffer.writeBytes(RSMSTools.packageString(wifiPassword));
         buffer.writeBytes(RSMSTools.packageString(apn));

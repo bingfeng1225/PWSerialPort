@@ -6,27 +6,27 @@ import cn.qd.peiwen.pwtools.EmptyUtils;
  * 超低温变频、T系列、双系统主控板通讯
  *
  */
-public class LTB760AGManager {
-    private LTB760AGSerialPort serialPort;
-    private static LTB760AGManager manager;
+public class LTB760AFGManager {
+    private LTB760AFGSerialPort serialPort;
+    private static LTB760AFGManager manager;
 
-    public static LTB760AGManager getInstance() {
+    public static LTB760AFGManager getInstance() {
         if (manager == null) {
-            synchronized (LTB760AGManager.class) {
+            synchronized (LTB760AFGManager.class) {
                 if (manager == null)
-                    manager = new LTB760AGManager();
+                    manager = new LTB760AFGManager();
             }
         }
         return manager;
     }
 
-    private LTB760AGManager() {
+    private LTB760AFGManager() {
 
     }
 
-    public void init(ILTB760AGListener listener) {
+    public void init(ILTB760AFGListener listener) {
         if(EmptyUtils.isEmpty(this.serialPort)){
-            this.serialPort = new LTB760AGSerialPort();
+            this.serialPort = new LTB760AFGSerialPort();
             this.serialPort.init(listener);
         }
     }

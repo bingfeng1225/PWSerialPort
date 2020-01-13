@@ -4,6 +4,7 @@ public class RSMSResponseEntity {
     private byte response;
 
     public RSMSResponseEntity() {
+
     }
 
     public byte getResponse() {

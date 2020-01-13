@@ -81,4 +81,22 @@ public class RSMSNetworkEntity {
     public void setApnPassword(String apnPassword) {
         this.apnPassword = apnPassword;
     }
+
+    @Override
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("联网模式：" + this.model + "\n");
+
+        buffer.append("服务器地址：" + this.address + "\n");
+        buffer.append("服务器端口：" + this.port + "\n");
+
+        buffer.append("WIFI名称：" + this.wifiName + "\n");
+        buffer.append("WIFI密码：" + this.wifiPassword + "\n");
+
+        buffer.append("APN：" + this.apn + "\n");
+        buffer.append("APN名称：" + this.apnName + "\n");
+        buffer.append("APN密码：" + this.apnPassword + "\n");
+
+        return buffer.toString();
+    }
 }

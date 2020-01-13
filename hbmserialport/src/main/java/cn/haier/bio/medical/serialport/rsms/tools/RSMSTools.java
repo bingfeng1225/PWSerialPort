@@ -1,5 +1,6 @@
 package cn.haier.bio.medical.serialport.rsms.tools;
 
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
@@ -12,7 +13,7 @@ import io.netty.buffer.Unpooled;
 
 public class RSMSTools {
     public static final byte DEVICE = (byte) 0xA0;
-    public static final byte CONFIG = (byte) 0xB0;
+    public static final byte DCE_CONFIG = (byte) 0xB0;
     public static final byte PDA_CONFIG = (byte) 0xB1;
     public static final byte[] HEADER = {(byte) 0x55, (byte) 0xAA};
     public static final byte[] TAILER = {(byte) 0xEA, (byte) 0xEE};
@@ -25,7 +26,6 @@ public class RSMSTools {
             (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x20,
             (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x20
     };
-
 
     public static final int RSMS_COMMAND_QUERY_STATUS = 0x1101;
     public static final int RSMS_RESPONSE_QUERY_STATUS = 0x1201;
@@ -194,6 +194,22 @@ public class RSMSTools {
         return entity;
     }
 
+    public static RSMSConfigModelResponseEntity parseRSMSConfigModelResponseEntity(byte[] data){
+        ByteBuf buffer = Unpooled.copiedBuffer(data);
+        buffer.skipBytes(6);
+
+        RSMSConfigModelResponseEntity entity = new RSMSConfigModelResponseEntity();
+        entity.setConfigModel(buffer.readByte());
+
+        byte[] mcu = new byte[12];
+        buffer.readBytes(mcu, 0, mcu.length);
+        entity.setMcu(mcu);
+
+        entity.setResponse(buffer.readByte());
+
+        return entity;
+    }
+
 
     //校验和取低8位算法
     public static byte computeL8SumCode(byte[] data) {
@@ -228,6 +244,4 @@ public class RSMSTools {
         buffer.skipBytes(1);//跳过尾\"
         return new String(data);
     }
-
-
 }

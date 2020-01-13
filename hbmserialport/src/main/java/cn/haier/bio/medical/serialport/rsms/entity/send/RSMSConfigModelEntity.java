@@ -12,7 +12,7 @@ public class RSMSConfigModelEntity implements IRSMSSendEntity {
     @Override
     public byte[] packageSendMessage() {
         if(!this.pda) {
-            return new byte[]{RSMSTools.CONFIG};
+            return new byte[]{RSMSTools.DCE_CONFIG};
         }else{
             return new byte[]{RSMSTools.PDA_CONFIG};
         }

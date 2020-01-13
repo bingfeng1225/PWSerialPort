@@ -1,5 +1,7 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
+import cn.qd.peiwen.pwtools.ByteUtils;
+
 public class RSMSModulesEntity {
     private byte[] mcu; //MCU识别码
     private byte[] mac; //WIFI MAC
@@ -93,5 +95,21 @@ public class RSMSModulesEntity {
 
     public void setModuleVersion(String moduleVersion) {
         this.moduleVersion = moduleVersion;
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("MCU识别码：" + new String(this.mcu) + "\n");
+        buffer.append("WIFI MAC：" + ByteUtils.bytes2HexString(mac) + "\n");
+        buffer.append("BE码：" + this.code + "\n");
+        buffer.append("IMEI号：" + this.imei + "\n");
+        buffer.append("ICCID号：" + this.iccid + "\n");
+        buffer.append("SIM卡号码：" + this.phone + "\n");
+        buffer.append("运营商：" + this.operator + "\n");
+        buffer.append("MCU软件版本：" + this.mcuVersion + "\n");
+        buffer.append("Wifi软件版本：" + this.wifiVersion + "\n");
+        buffer.append("模块软件版本：" + this.moduleVersion + "\n");
+        return buffer.toString();
     }
 }

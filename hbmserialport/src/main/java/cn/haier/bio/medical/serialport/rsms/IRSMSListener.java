@@ -1,6 +1,7 @@
 package cn.haier.bio.medical.serialport.rsms;
 
 
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
@@ -12,8 +13,15 @@ public interface IRSMSListener {
     void onRSMSException();
     void onMessageSended(String data);
     void onMessageRecved(String data);
-    void onRSMSStatusChanged(RSMSStatusEntity status);
-    void onRSMSNetworChanged(RSMSNetworkEntity network);
-    void onRSMSModulesChanged(RSMSModulesEntity modules);
-    void onRSMSResponseChanged(int type, RSMSResponseEntity response);
+    void onRSMSStatusReceived(RSMSStatusEntity status);
+    void onRSMSNetworReceived(RSMSNetworkEntity network);
+    void onRSMSModulesReceived(RSMSModulesEntity modules);
+
+    void onRSMSUnknownReceived();
+    void onRSMSDataCollectionReceived();
+    void onRSMSRecoveryReceived(RSMSResponseEntity response);
+    void onRSMSClearCacheReceived(RSMSResponseEntity response);
+    void onRSMSQuitConfigReceived(RSMSResponseEntity response);
+    void onRSMSConfigNetworkReceived(RSMSResponseEntity response);
+    void onRSMSEnterConfigReceived(RSMSConfigModelResponseEntity response);
 }

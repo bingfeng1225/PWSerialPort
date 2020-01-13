@@ -8,6 +8,7 @@ import android.os.Message;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
@@ -259,101 +260,82 @@ public class RSMSSerialPort implements PWSerialPortListener {
                 PWLogger.d("校验和不匹配，丢弃帧头，查找下一帧数据");
                 continue;
             }
+            short type = this.buffer.getShort(4);
             this.buffer.discardReadBytes();
             String log = ByteUtils.bytes2HexString(data, true, ", ");
             PWLogger.d("指令接收:" + log);
             if (EmptyUtils.isNotEmpty(this.listener)) {
                 this.listener.get().onMessageRecved(log);
             }
-            short type = this.buffer.getShort(4);
             switch (type) {
                 case RSMSTools.RSMS_RESPONSE_QUERY_STATUS: {
                     RSMSStatusEntity entity = RSMSTools.parseRSMSStatusEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSStatusChanged(entity);
+                        this.listener.get().onRSMSStatusReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_QUERY_NETWORK: {
                     RSMSNetworkEntity entity = RSMSTools.parseRSMSNetworkEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSNetworChanged(entity);
+                        this.listener.get().onRSMSNetworReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_QUERY_MODULES: {
                     RSMSModulesEntity entity = RSMSTools.parseRSMSModulesEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSModulesChanged(entity);
+                        this.listener.get().onRSMSModulesReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_ENTER:{
-                        RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
-                        if(0x01 == entity.getResponse()){
-                            PWLogger.d("进入配置模式成功");
-                        }else{
-                            PWLogger.d("进入配置模式失败");
-                        }
+                        RSMSConfigModelResponseEntity entity = RSMSTools.parseRSMSConfigModelResponseEntity(data);
                         if (EmptyUtils.isNotEmpty(this.listener)) {
-                            this.listener.get().onRSMSResponseChanged(type, entity);
+                            this.listener.get().onRSMSEnterConfigReceived(entity);
                         }
                         break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_QUIT:{
                     RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
-                    if(0x01 == entity.getResponse()){
-                        PWLogger.d("退出配置模式成功");
-                    }else{
-                        PWLogger.d("退出配置模式失败");
-                    }
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSResponseChanged(type, entity);
+                        this.listener.get().onRSMSQuitConfigReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_NETWORK:{
                     RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
-                    if(0x01 == entity.getResponse()){
-                        PWLogger.d("配置网络参数成功");
-                    }else{
-                        PWLogger.d("配置网络参数失败");
-                    }
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSResponseChanged(type, entity);
+                        this.listener.get().onRSMSConfigNetworkReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_RECOVERY:{
                     RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
-                    if(0x01 == entity.getResponse()){
-                        PWLogger.d("恢复出厂设置成功");
-                    }else{
-                        PWLogger.d("恢复出厂设置失败");
-                    }
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSResponseChanged(type, entity);
+                        this.listener.get().onRSMSRecoveryReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_CLEAR_CACHE: {
                     RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
-                    if(0x01 == entity.getResponse()){
-                        PWLogger.d("清空缓存数据成功");
-                    }else{
-                        PWLogger.d("清空缓存数据失败");
-                    }
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSResponseChanged(type, entity);
+                        this.listener.get().onRSMSClearCacheReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_COLLECTION_DATA: {
-                    PWLogger.d("数据采集成功");
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSDataCollectionReceived();
+                    }
                     break;
                 }
                 default:
-                    PWLogger.d("指令" + type + "暂不支持");
+                    byte[] bytes = ByteUtils.short2Bytes(type);
+                    if(EmptyUtils.isNotEmpty(this.listener)){
+                        this.listener.get().onRSMSUnknownReceived();
+                    }
+                    PWLogger.d("指令" + ByteUtils.bytes2HexString(bytes, true) + "暂不支持");
                     break;
             }
         }

@@ -16,6 +16,7 @@ import cn.haier.bio.medical.serialport.refriger.entity.LTB760AFGEntity;
 import cn.haier.bio.medical.serialport.rfid.IRFIDZLG600AListener;
 import cn.haier.bio.medical.serialport.rsms.IRSMSListener;
 import cn.haier.bio.medical.serialport.rsms.RSMSManager;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
@@ -38,7 +39,22 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         RSMSManager.getInstance().enable();
     }
 
-    public byte[] getMachineHardwareAddress() {
+    private void refreshTextView(final String text) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(text);
+                int offset = textView.getLineCount() * textView.getLineHeight();
+                if (offset > textView.getHeight()) {
+                    textView.scrollTo(0, offset - textView.getHeight());
+                } else {
+                    textView.scrollTo(0, 0);
+                }
+            }
+        });
+    }
+
+    private byte[] getMachineHardwareAddress() {
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
@@ -87,8 +103,7 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
                 RSMSManager.getInstance().enterPDAConfigModel();
                 break;
             case R.id.clear:
-                this.textView.setText("");
-                this.refreshTextView();
+                this.refreshTextView("");
                 break;
             case R.id.config_network:
                 RSMSConfigEntity entity = new RSMSConfigEntity();
@@ -269,38 +284,13 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         PWLogger.e("RSMS exception");
     }
 
-    @Override
-    public void onRSMSStatusChanged(RSMSStatusEntity status) {
-        PWLogger.e("RSMS status changed");
-    }
-
-    @Override
-    public void onRSMSNetworChanged(RSMSNetworkEntity network) {
-        PWLogger.e("RSMS network changed");
-    }
-
-    @Override
-    public void onRSMSModulesChanged(RSMSModulesEntity modules) {
-        PWLogger.e("RSMS modules changed");
-    }
-
-    @Override
-    public void onRSMSResponseChanged(int type, RSMSResponseEntity response) {
-        PWLogger.e("RSMS response changed:" + type);
-    }
 
     @Override
     public void onMessageSended(String data) {
         final StringBuffer buffer = new StringBuffer(textView.getText().toString());
         buffer.append("发送数据:\n");
         buffer.append(data + "\n");
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textView.setText(buffer.toString());
-                refreshTextView();
-            }
-        });
+        this.refreshTextView(buffer.toString());
     }
 
     @Override
@@ -308,21 +298,96 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         final StringBuffer buffer = new StringBuffer(textView.getText().toString());
         buffer.append("接收数据:\n");
         buffer.append(data + "\n");
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textView.setText(buffer.toString());
-                refreshTextView();
-            }
-        });
+        this.refreshTextView(buffer.toString());
     }
 
-    private void refreshTextView() {
-        int offset = this.textView.getLineCount() * this.textView.getLineHeight();
-        if (offset > this.textView.getHeight()) {
-            this.textView.scrollTo(0, offset - this.textView.getHeight());
-        }else{
-            this.textView.scrollTo(0, 0);
+    @Override
+    public void onRSMSStatusReceived(RSMSStatusEntity status) {
+        final StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        buffer.append(status.toString());
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSNetworReceived(RSMSNetworkEntity network) {
+        final StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        buffer.append(network.toString());
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSModulesReceived(RSMSModulesEntity modules) {
+        final StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        buffer.append(modules.toString());
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSUnknownReceived() {
+        final StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        buffer.append("接收到未知类型的信息\n");
+    }
+
+    @Override
+    public void onRSMSDataCollectionReceived() {
+        final StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        buffer.append("数据采集成功\n");
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSRecoveryReceived(RSMSResponseEntity response) {
+        StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        if (0x01 == response.getResponse()) {
+            buffer.append("恢复出厂设置成功\n");
+        } else {
+            buffer.append("恢复出厂设置失败\n");
         }
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSClearCacheReceived(RSMSResponseEntity response) {
+        StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        if (0x01 == response.getResponse()) {
+            buffer.append("清空本地缓存成功\n");
+        } else {
+            buffer.append("清空本地缓存失败\n");
+        }
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSQuitConfigReceived(RSMSResponseEntity response) {
+        StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        if (0x01 == response.getResponse()) {
+            buffer.append("退出配置模式成功\n");
+        } else {
+            buffer.append("退出配置模式失败\n");
+        }
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSConfigNetworkReceived(RSMSResponseEntity response) {
+        StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        if (0x01 == response.getResponse()) {
+            buffer.append("配置网络参数成功\n");
+        } else {
+            buffer.append("配置网络参数失败\n");
+        }
+        this.refreshTextView(buffer.toString());
+    }
+
+    @Override
+    public void onRSMSEnterConfigReceived(RSMSConfigModelResponseEntity response) {
+        StringBuffer buffer = new StringBuffer(textView.getText().toString());
+        buffer.append("DTE识别码：" + new String(response.getMcu()));
+        if (0x01 == response.getResponse()) {
+            buffer.append("进入" + (0xB0 == response.getConfigModel() ? "串口" : "PDA") + "配置模式成功\n");
+        } else {
+            buffer.append("进入" + (0xB0 == response.getConfigModel() ? "串口" : "PDA") + "配置模式失败\n");
+        }
+        this.refreshTextView(buffer.toString());
     }
 }

@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import cn.haier.bio.medical.demo.control.ControlTools;
 import cn.haier.bio.medical.demo.control.recv.TemptureEntity;
 import cn.haier.bio.medical.demo.mcu.LTB760AFGCollectionEntity;
+import cn.haier.bio.medical.demo.mcu.TestSendEntity;
 import cn.haier.bio.medical.serialport.refriger.ILTB760AFGListener;
 import cn.haier.bio.medical.serialport.refriger.entity.LTB760AFGEntity;
 import cn.haier.bio.medical.serialport.rsms.IRSMSListener;

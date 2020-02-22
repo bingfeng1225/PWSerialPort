@@ -106,6 +106,7 @@ public class TZFPSerialPort implements PWSerialPortListener {
     }
 
     public void release() {
+        this.listener = null;
         this.state = TZFPTools.FINGER_STATE_DISABLED;
         this.destoryHandler();
         this.destoryHelper();
@@ -127,7 +128,7 @@ public class TZFPSerialPort implements PWSerialPortListener {
 
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
-            this.helper = new PWSerialPortHelper("TZFPManager");
+            this.helper = new PWSerialPortHelper("TZFPSerialPort");
             this.helper.setTimeout(10);
             this.helper.setPath("/dev/ttyUSB0");
             this.helper.setBaudrate(115200);
@@ -144,7 +145,7 @@ public class TZFPSerialPort implements PWSerialPortListener {
 
     private void createHandler() {
         if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
-            this.thread = new HandlerThread("TZFPManager");
+            this.thread = new HandlerThread("TZFPSerialPort");
             this.thread.start();
             this.handler = new TZFPHandler(this.thread.getLooper());
         }

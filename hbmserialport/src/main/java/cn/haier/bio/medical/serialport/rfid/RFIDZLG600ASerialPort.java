@@ -56,6 +56,7 @@ public class RFIDZLG600ASerialPort implements PWSerialPortListener {
     }
 
     public void release() {
+        this.listener = null;
         this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();
@@ -76,7 +77,7 @@ public class RFIDZLG600ASerialPort implements PWSerialPortListener {
 
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
-            this.helper = new PWSerialPortHelper("RFIDZLG600AManager");
+            this.helper = new PWSerialPortHelper("RFIDZLG600ASerialPort");
             this.helper.setTimeout(2);
             if ("magton".equals(Build.MODEL)) {
                 this.helper.setPath("/dev/ttyS5");
@@ -97,7 +98,7 @@ public class RFIDZLG600ASerialPort implements PWSerialPortListener {
 
     private void createHandler() {
         if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
-            this.thread = new HandlerThread("RFIDZLG600AManager");
+            this.thread = new HandlerThread("RFIDZLG600ASerialPort");
             this.thread.start();
             this.handler = new RFIDHandler(this.thread.getLooper());
         }

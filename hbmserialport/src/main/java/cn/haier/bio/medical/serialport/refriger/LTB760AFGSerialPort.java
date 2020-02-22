@@ -56,6 +56,7 @@ public class LTB760AFGSerialPort implements PWSerialPortListener {
     }
 
     public void release() {
+        this.listener = null;
         this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();
@@ -76,7 +77,7 @@ public class LTB760AFGSerialPort implements PWSerialPortListener {
 
     private void createHelper() {
         if (EmptyUtils.isEmpty(this.helper)) {
-            this.helper = new PWSerialPortHelper("LTB760AFGManager");
+            this.helper = new PWSerialPortHelper("LTB760AFGSerialPort");
             this.helper.setTimeout(2);
             if ("magton".equals(Build.MODEL)) {
                 this.helper.setPath("/dev/ttyS2");
@@ -97,7 +98,7 @@ public class LTB760AFGSerialPort implements PWSerialPortListener {
 
     private void createHandler() {
         if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
-            this.thread = new HandlerThread("LTB760AFGManager");
+            this.thread = new HandlerThread("LTB760AFGSerialPort");
             this.thread.start();
             this.handler = new LTB760AGHandler(this.thread.getLooper());
         }

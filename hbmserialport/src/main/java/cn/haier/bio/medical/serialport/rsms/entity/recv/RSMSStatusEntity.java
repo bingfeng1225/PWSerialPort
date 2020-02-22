@@ -130,18 +130,18 @@ public class RSMSStatusEntity {
         buffer.append("联网模式：" + this.model + "\n");
 
         //状态指示
-        buffer.append("4G初始化状态0：" + ((status & 0x80) == 0x80) + "\n");
-        buffer.append("4G注册联网状态1：" + ((status & 0x40) == 0x40) + "\n");
-        buffer.append("SIM监测状态2：" + ((status & 0x20) == 0x20) + "\n");
-        buffer.append("WIFI初始化状态3：" + ((status & 0x10) == 0x10) + "\n");
-        buffer.append("WIFI联网状态4：" + ((status & 0x08) == 0x08) + "\n");
-        buffer.append("WIFI检索状态5：" + ((status & 0x04) == 0x04) + "\n");
-        buffer.append("DCE数据存储状态6：" + ((status & 0x02) == 0x02) + "\n");
-        buffer.append("DCE准备状态7：" + ((status & 0x01) == 0x01)+ "\n");
+        buffer.append("4G初始化状态0：" + ((status & 0x01) == 0x01) + "\n");
+        buffer.append("4G注册联网状态1：" + ((status & 0x02) == 0x02) + "\n");
+        buffer.append("SIM监测状态2：" + ((status & 0x04) == 0x04) + "\n");
+        buffer.append("WIFI初始化状态3：" + ((status & 0x08) == 0x08) + "\n");
+        buffer.append("WIFI联网状态4：" + ((status & 0x10) == 0x10) + "\n");
+        buffer.append("WIFI检索状态5：" + ((status & 0x20) == 0x20) + "\n");
+        buffer.append("DCE数据存储状态6：" + ((status & 0x40) == 0x40) + "\n");
+        buffer.append("DCE准备状态7：" + ((status & 0x80) == 0x80)+ "\n");
 
         //编码规则指示
-        buffer.append("设备识别码状态：" + ((status & 0x80) == 0x80) + "\n");
-        buffer.append("BE码状态：" + ((status & 0x40) == 0x40) + "\n");
+        buffer.append("设备识别码状态：" + ((status & 0x01) == 0x01) + "\n");
+        buffer.append("BE码状态：" + ((status & 0x02) == 0x02) + "\n");
 
         buffer.append("4G信号强度：" + this.level + "\n");
         buffer.append("WIFI信号强度：" + this.wifiLevel + "\n");

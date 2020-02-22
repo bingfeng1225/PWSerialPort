@@ -1,20 +1,11 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
 public class RSMSConfigModelResponseEntity {
-    private byte[] mcu;
     private byte response;
     private byte configModel;
 
     public RSMSConfigModelResponseEntity() {
 
-    }
-
-    public byte[] getMcu() {
-        return mcu;
-    }
-
-    public void setMcu(byte[] mcu) {
-        this.mcu = mcu;
     }
 
     public byte getResponse() {

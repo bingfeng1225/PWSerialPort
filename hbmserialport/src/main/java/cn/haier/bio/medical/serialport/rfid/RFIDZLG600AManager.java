@@ -45,7 +45,7 @@ public class RFIDZLG600AManager {
 
     public void release() {
         if(EmptyUtils.isNotEmpty(this.serialPort)){
-            this.serialPort.enable();
+            this.serialPort.release();
             this.serialPort = null;
         }
     }

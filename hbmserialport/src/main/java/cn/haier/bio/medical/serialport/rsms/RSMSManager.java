@@ -19,7 +19,7 @@ public class RSMSManager {
         return manager;
     }
 
-    private RSMSManager(){
+    private RSMSManager() {
 
     }
 

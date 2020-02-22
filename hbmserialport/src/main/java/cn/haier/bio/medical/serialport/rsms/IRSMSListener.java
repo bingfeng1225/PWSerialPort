@@ -2,6 +2,7 @@ package cn.haier.bio.medical.serialport.rsms;
 
 
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
@@ -19,6 +20,7 @@ public interface IRSMSListener {
 
     void onRSMSUnknownReceived();
     void onRSMSDataCollectionReceived();
+    void onRSMSControlReceived(RSMSControlEntity entity);
     void onRSMSRecoveryReceived(RSMSResponseEntity response);
     void onRSMSClearCacheReceived(RSMSResponseEntity response);
     void onRSMSQuitConfigReceived(RSMSResponseEntity response);

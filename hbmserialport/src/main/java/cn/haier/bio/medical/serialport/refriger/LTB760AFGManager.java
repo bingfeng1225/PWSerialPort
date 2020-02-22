@@ -45,7 +45,7 @@ public class LTB760AFGManager {
 
     public void release() {
         if(EmptyUtils.isNotEmpty(this.serialPort)){
-            this.serialPort.enable();
+            this.serialPort.disable();
             this.serialPort = null;
         }
     }

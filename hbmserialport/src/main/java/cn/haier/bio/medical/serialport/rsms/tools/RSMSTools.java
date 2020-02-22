@@ -1,6 +1,7 @@
 package cn.haier.bio.medical.serialport.rsms.tools;
 
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
@@ -18,7 +19,7 @@ public class RSMSTools {
     public static final byte[] HEADER = {(byte) 0x55, (byte) 0xAA};
     public static final byte[] TAILER = {(byte) 0xEA, (byte) 0xEE};
     public static final byte[] DEFAULT_MAC = {
-            (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF
+            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF
     };
     public static final byte[] DEFAULT_BE_CODE = {
             (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x20,
@@ -53,6 +54,9 @@ public class RSMSTools {
 
     public static final int RSMS_COMMAND_COLLECTION_DATA = 0x1501;
     public static final int RSMS_RESPONSE_COLLECTION_DATA = 0x1601;
+
+    public static final int RSMS_CONTROL_COMMAND = 0xC001;
+    public static final int RSMS_CONTROL_RESPONSE = 0xC101;
 
     public static boolean checkFrame(byte[] data) {
         byte check = data[data.length - 3];
@@ -112,7 +116,7 @@ public class RSMSTools {
     public static RSMSStatusEntity parseRSMSStatusEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
-        
+
         RSMSStatusEntity entity = new RSMSStatusEntity();
 
         entity.setModel(buffer.readByte());
@@ -181,10 +185,10 @@ public class RSMSTools {
         entity.setMcuVersion(parseString(buffer));
 
         entity.setOperator(parseString(buffer));
-        return null;
+        return entity;
     }
 
-    public static RSMSResponseEntity parseRSMSResponseEntity(byte[] data){
+    public static RSMSResponseEntity parseRSMSResponseEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
 
@@ -194,22 +198,35 @@ public class RSMSTools {
         return entity;
     }
 
-    public static RSMSConfigModelResponseEntity parseRSMSConfigModelResponseEntity(byte[] data){
+    public static RSMSConfigModelResponseEntity parseRSMSConfigModelResponseEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
 
         RSMSConfigModelResponseEntity entity = new RSMSConfigModelResponseEntity();
         entity.setConfigModel(buffer.readByte());
-
-        byte[] mcu = new byte[12];
-        buffer.readBytes(mcu, 0, mcu.length);
-        entity.setMcu(mcu);
-
         entity.setResponse(buffer.readByte());
 
         return entity;
     }
 
+    public static RSMSControlEntity parseRSMSControlEntity(byte[] data) {
+        ByteBuf buffer = Unpooled.copiedBuffer(data);
+        buffer.skipBytes(6);
+        RSMSControlEntity entity = new RSMSControlEntity();
+        entity.setYear(buffer.readByte());
+        entity.setMonth(buffer.readByte());
+        entity.setDay(buffer.readByte());
+        entity.setHour(buffer.readByte());
+        entity.setMinute(buffer.readByte());
+        entity.setSecond(buffer.readByte());
+        entity.setCommand(buffer.readShort());
+        int read = buffer.readerIndex();
+        int write = buffer.writerIndex();
+        byte[] control = new byte[write - read - 3];
+        buffer.readBytes(control, 0, control.length);
+        entity.setControl(control);
+        return entity;
+    }
 
     //校验和取低8位算法
     public static byte computeL8SumCode(byte[] data) {
@@ -239,7 +256,7 @@ public class RSMSTools {
     private static String parseString(ByteBuf buffer) {
         buffer.skipBytes(1); //跳过头\"
         int index = ByteBufTools.indexOf(buffer, (byte) ('\"'));
-        byte[] data = new byte[index];
+        byte[] data = new byte[index - buffer.readerIndex()];
         buffer.readBytes(data, 0, data.length);
         buffer.skipBytes(1);//跳过尾\"
         return new String(data);

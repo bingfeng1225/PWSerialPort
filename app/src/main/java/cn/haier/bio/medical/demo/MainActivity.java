@@ -20,7 +20,6 @@ import cn.haier.bio.medical.serialport.refriger.ILTB760AFGListener;
 import cn.haier.bio.medical.serialport.refriger.entity.LTB760AFGEntity;
 import cn.haier.bio.medical.serialport.rsms.IRSMSListener;
 import cn.haier.bio.medical.serialport.rsms.RSMSManager;
-import cn.haier.bio.medical.serialport.rsms.TestSendEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;

@@ -1,4 +1,4 @@
-package cn.haier.bio.medical.serialport.rsms;
+package cn.haier.bio.medical.demo.mcu;
 
 import cn.haier.bio.medical.serialport.rsms.entity.send.IRSMSSendEntity;
 

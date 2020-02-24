@@ -247,9 +247,9 @@ public class RSMSSerialPort implements PWSerialPortListener {
 
     @Override
     public void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException {
-//        if (!this.isInitialized() || !helper.equals(this.helper)) {
-//            return;
-//        }
+        if (!this.isInitialized() || !helper.equals(this.helper)) {
+            return;
+        }
         this.buffer.writeBytes(buffer, 0, length);
         while (this.buffer.readableBytes() > 4) {
             //帧头监测

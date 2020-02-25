@@ -12,10 +12,11 @@ public interface IRSMSListener {
     void onRSMSReady();
     void onRSMSConnected();
     void onRSMSException();
+    String findDeviceCode();
     void onMessageSended(String data);
     void onMessageRecved(String data);
     void onRSMSStatusReceived(RSMSStatusEntity status);
-    void onRSMSNetworReceived(RSMSNetworkEntity network);
+    void onRSMSNetworkReceived(RSMSNetworkEntity network);
     void onRSMSModulesReceived(RSMSModulesEntity modules);
 
     void onRSMSUnknownReceived();

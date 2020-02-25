@@ -37,7 +37,6 @@ public class RSMSSerialPort implements PWSerialPortListener {
     private PWSerialPortHelper helper;
 
     private byte[] mac;
-    private String code;
     private boolean ready = false;
     private boolean enabled = false;
     private WeakReference<IRSMSListener> listener;
@@ -46,28 +45,12 @@ public class RSMSSerialPort implements PWSerialPortListener {
 
     }
 
-    public void init(String code, byte[] mac, IRSMSListener listener) {
+    public void init(byte[] mac, IRSMSListener listener) {
         createHandler();
         createBuffer();
         createHelper();
         this.mac = RSMSTools.generateMac(mac);
-        this.code = RSMSTools.generateCode(code);
         this.listener = new WeakReference<>(listener);
-
-//        byte[] data = {
-//                (byte)0x14, (byte)0x01, (byte)0x11,
-//                (byte)0x11, (byte)0x16, (byte)0x1B, (byte)0x90, (byte)0xFE,
-//                (byte)0xEC, (byte)0xFF
-//        };
-//
-//        byte[] buffer = RSMSTools.packageCommand(RSMSTools.RSMS_CONTROL_COMMAND,new TestSendEntity(data));
-//
-//
-//        try {
-//            this.onByteReceived(null,buffer,buffer.length);
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
     }
 
     public void enable() {
@@ -87,8 +70,12 @@ public class RSMSSerialPort implements PWSerialPortListener {
     public void queryStatus() {
         RSMSQueryStatusEntity entity = new RSMSQueryStatusEntity();
         entity.setMac(this.mac);
-        entity.setCode(this.code);
         entity.setMcu(RSMSTools.DEFAULT_MAC);
+        String code = null;
+        if(EmptyUtils.isNotEmpty(this.listener)){
+            code = this.listener.get().findDeviceCode();
+        }
+        entity.setCode(RSMSTools.generateCode(code));
         this.sendCommand(RSMSTools.RSMS_COMMAND_QUERY_STATUS, entity);
     }
 
@@ -321,7 +308,7 @@ public class RSMSSerialPort implements PWSerialPortListener {
                 case RSMSTools.RSMS_RESPONSE_QUERY_NETWORK: {
                     RSMSNetworkEntity entity = RSMSTools.parseRSMSNetworkEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSNetworReceived(entity);
+                        this.listener.get().onRSMSNetworkReceived(entity);
                     }
                     break;
                 }

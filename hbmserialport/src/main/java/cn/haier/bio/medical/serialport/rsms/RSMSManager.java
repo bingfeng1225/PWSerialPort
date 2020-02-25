@@ -23,10 +23,10 @@ public class RSMSManager {
 
     }
 
-    public void init(String code, byte[] mac, IRSMSListener listener) {
+    public void init(byte[] mac, IRSMSListener listener) {
         if (EmptyUtils.isEmpty(this.serialPort)) {
             this.serialPort = new RSMSSerialPort();
-            this.serialPort.init(code, mac, listener);
+            this.serialPort.init(mac, listener);
         }
     }
 

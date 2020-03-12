@@ -1,11 +1,12 @@
 package cn.haier.bio.medical.serialport.rsms.tools;
 
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSStatusEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSEnterConfigResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlCommandEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryModulesResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryPDAModulesResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSCommontResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryStatusResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.IRSMSSendEntity;
 import cn.haier.bio.medical.serialport.tools.ByteBufTools;
 import cn.qd.peiwen.pwtools.EmptyUtils;
@@ -14,7 +15,7 @@ import io.netty.buffer.Unpooled;
 
 public class RSMSTools {
     public static final byte DEVICE = (byte) 0xA0;
-    public static final byte DCE_CONFIG = (byte) 0xB0;
+    public static final byte DTE_CONFIG = (byte) 0xB0;
     public static final byte PDA_CONFIG = (byte) 0xB1;
     public static final byte[] HEADER = {(byte) 0x55, (byte) 0xAA};
     public static final byte[] TAILER = {(byte) 0xEA, (byte) 0xEE};
@@ -37,14 +38,23 @@ public class RSMSTools {
     public static final int RSMS_COMMAND_QUERY_MODULES = 0x1103;
     public static final int RSMS_RESPONSE_QUERY_MODULES = 0x1203;
 
-    public static final int RSMS_COMMAND_CONFIG_ENTER = 0x1301;
-    public static final int RSMS_RESPONSE_CONFIG_ENTER = 0x1401;
+    public static final int RSMS_COMMAND_QUERY_PDA_MODULES = 0x1104;
+    public static final int RSMS_RESPONSE_QUERY_PDA_MODULES = 0x1204;
+
+    public static final int RSMS_COMMAND_ENTER_CONFIG = 0x1301;
+    public static final int RSMS_RESPONSE_ENTER_CONFIG = 0x1401;
 
     public static final int RSMS_COMMAND_CONFIG_QUIT = 0x1302;
     public static final int RSMS_RESPONSE_CONFIG_QUIT = 0x1402;
 
-    public static final int RSMS_COMMAND_CONFIG_NETWORK = 0x1303;
-    public static final int RSMS_RESPONSE_CONFIG_NETWORK = 0x1403;
+    public static final int RSMS_COMMAND_CONFIG_DTE_MODEL = 0x1303;
+    public static final int RSMS_RESPONSE_CONFIG_DTE_MODEL = 0x1403;
+
+    public static final int RSMS_COMMAND_CONFIG_A_MODEL = 0x1304;
+    public static final int RSMS_RESPONSE_CONFIG_A_MODEL = 0x1404;
+
+    public static final int RSMS_COMMAND_CONFIG_B_MODEL = 0x1305;
+    public static final int RSMS_RESPONSE_CONFIG_B_MODEL = 0x1405;
 
     public static final int RSMS_COMMAND_CONFIG_RECOVERY = 0x1306;
     public static final int RSMS_RESPONSE_CONFIG_RECOVERY = 0x1406;
@@ -113,11 +123,11 @@ public class RSMSTools {
         return data;
     }
 
-    public static RSMSStatusEntity parseRSMSStatusEntity(byte[] data) {
+    public static RSMSQueryStatusResponseEntity parseRSMSStatusEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
 
-        RSMSStatusEntity entity = new RSMSStatusEntity();
+        RSMSQueryStatusResponseEntity entity = new RSMSQueryStatusResponseEntity();
 
         entity.setModel(buffer.readByte());
 
@@ -140,11 +150,11 @@ public class RSMSTools {
         return entity;
     }
 
-    public static RSMSNetworkEntity parseRSMSNetworkEntity(byte[] data) {
+    public static RSMSNetworkResponseEntity parseRSMSNetworkEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
 
-        RSMSNetworkEntity entity = new RSMSNetworkEntity();
+        RSMSNetworkResponseEntity entity = new RSMSNetworkResponseEntity();
 
         entity.setModel(buffer.readByte());
 
@@ -161,11 +171,11 @@ public class RSMSTools {
         return entity;
     }
 
-    public static RSMSModulesEntity parseRSMSModulesEntity(byte[] data) {
+    public static RSMSQueryModulesResponseEntity parseRSMSModulesEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
 
-        RSMSModulesEntity entity = new RSMSModulesEntity();
+        RSMSQueryModulesResponseEntity entity = new RSMSQueryModulesResponseEntity();
         byte[] mcu = new byte[12];
         buffer.readBytes(mcu, 0, mcu.length);
         entity.setMcu(mcu);
@@ -188,31 +198,38 @@ public class RSMSTools {
         return entity;
     }
 
-    public static RSMSResponseEntity parseRSMSResponseEntity(byte[] data) {
+    public static RSMSQueryPDAModulesResponseEntity parseRSMSPDAModulesEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
-
-        RSMSResponseEntity entity = new RSMSResponseEntity();
-        entity.setResponse(buffer.readByte());
-
+        RSMSQueryPDAModulesResponseEntity entity = new RSMSQueryPDAModulesResponseEntity();
+        entity.setDeviceType(buffer.readByte());
+        entity.setConfigType(buffer.readByte());
         return entity;
     }
 
-    public static RSMSConfigModelResponseEntity parseRSMSConfigModelResponseEntity(byte[] data) {
+    public static RSMSCommontResponseEntity parseRSMSResponseEntity(byte[] data) {
+        ByteBuf buffer = Unpooled.copiedBuffer(data);
+        buffer.skipBytes(6);
+        RSMSCommontResponseEntity entity = new RSMSCommontResponseEntity();
+        entity.setResponse(buffer.readByte());
+        return entity;
+    }
+
+    public static RSMSEnterConfigResponseEntity parseRSMSConfigModelResponseEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
 
-        RSMSConfigModelResponseEntity entity = new RSMSConfigModelResponseEntity();
+        RSMSEnterConfigResponseEntity entity = new RSMSEnterConfigResponseEntity();
         entity.setConfigModel(buffer.readByte());
         entity.setResponse(buffer.readByte());
 
         return entity;
     }
 
-    public static RSMSControlEntity parseRSMSControlEntity(byte[] data) {
+    public static RSMSControlCommandEntity parseRSMSControlEntity(byte[] data) {
         ByteBuf buffer = Unpooled.copiedBuffer(data);
         buffer.skipBytes(6);
-        RSMSControlEntity entity = new RSMSControlEntity();
+        RSMSControlCommandEntity entity = new RSMSControlCommandEntity();
         entity.setYear(buffer.readByte());
         entity.setMonth(buffer.readByte());
         entity.setDay(buffer.readByte());
@@ -261,4 +278,6 @@ public class RSMSTools {
         buffer.skipBytes(1);//跳过尾\"
         return new String(data);
     }
+
+
 }

@@ -1,9 +1,9 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
-public class RSMSResponseEntity {
+public class RSMSCommontResponseEntity {
     private byte response;
 
-    public RSMSResponseEntity() {
+    public RSMSCommontResponseEntity() {
 
     }
 

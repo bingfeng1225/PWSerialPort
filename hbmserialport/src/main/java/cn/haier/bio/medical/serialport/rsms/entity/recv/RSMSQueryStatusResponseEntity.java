@@ -1,6 +1,6 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
-public class RSMSStatusEntity {
+public class RSMSQueryStatusResponseEntity {
     private byte model; //联网模式
     private byte status;//模块状态码
     private byte encode;//编码规则状态码
@@ -15,7 +15,7 @@ public class RSMSStatusEntity {
     private byte minute;//分
     private byte second;//秒
 
-    public RSMSStatusEntity() {
+    public RSMSQueryStatusResponseEntity() {
 
     }
 
@@ -140,8 +140,8 @@ public class RSMSStatusEntity {
         buffer.append("DCE准备状态7：" + ((status & 0x80) == 0x80)+ "\n");
 
         //编码规则指示
-        buffer.append("设备识别码状态：" + ((status & 0x01) == 0x01) + "\n");
-        buffer.append("BE码状态：" + ((status & 0x02) == 0x02) + "\n");
+        buffer.append("设备识别码状态：" + ((encode & 0x01) == 0x01) + "\n");
+        buffer.append("BE码状态：" + ((encode & 0x02) == 0x02) + "\n");
 
         buffer.append("4G信号强度：" + this.level + "\n");
         buffer.append("WIFI信号强度：" + this.wifiLevel + "\n");

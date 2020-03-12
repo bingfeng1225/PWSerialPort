@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.net.NetworkInterface;
-import java.nio.ByteOrder;
 import java.util.Enumeration;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,26 +17,29 @@ import cn.haier.bio.medical.demo.control.recv.TemptureEntity;
 import cn.haier.bio.medical.demo.mcu.LTB760AFGCollectionEntity;
 import cn.haier.bio.medical.demo.mcu.TestSendEntity;
 import cn.haier.bio.medical.serialport.refriger.ILTB760AFGListener;
+import cn.haier.bio.medical.serialport.refriger.LTB760AFGManager;
 import cn.haier.bio.medical.serialport.refriger.entity.LTB760AFGEntity;
-import cn.haier.bio.medical.serialport.rsms.IRSMSListener;
-import cn.haier.bio.medical.serialport.rsms.RSMSManager;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSStatusEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.RSMSCommandManager;
+import cn.haier.bio.medical.serialport.rsms.RSMSDTEManager;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSCommontResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlCommandEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSEnterConfigResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryModulesResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryPDAModulesResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryStatusResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSAModelConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSDTEModelConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.listener.IRSMSDTEListener;
+import cn.haier.bio.medical.serialport.rsms.listener.IRSMSListener;
 import cn.qd.peiwen.pwlogger.PWLogger;
-import cn.qd.peiwen.pwtools.ByteUtils;
+import cn.qd.peiwen.pwtools.EmptyUtils;
 
 
-public class MainActivity extends AppCompatActivity implements ILTB760AFGListener, IRSMSListener {
+public class MainActivity extends AppCompatActivity implements ILTB760AFGListener, IRSMSListener, IRSMSDTEListener {
     private TextView textView;
-    private boolean ready;
-    private long lastTime = 0;
     private LTB760AFGEntity entity;
-    private RSMSStatusEntity status;
+    private QRCodeDialog qrCodeDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,22 +48,16 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         this.textView = findViewById(R.id.text);
         this.textView.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        byte[] data1 = {(byte) 0xAE, 0x47, 0x10, 0x42};
-        byte[] data2 = {(byte) 0xF6, (byte) 0xA8, (byte) 0xF0, 0x42};
+        LTB760AFGManager.getInstance().init(this);
+        LTB760AFGManager.getInstance().enable();
 
-        PWLogger.e("BIG_ENDIAN 1:" + ByteUtils.bytes2Flaot(data1));
-        PWLogger.e("LITTLE_ENDIAN 1:" + ByteUtils.bytes2Flaot(data1, ByteOrder.LITTLE_ENDIAN));
+//        RSMSCommandManager.getInstance().init(this.getMachineHardwareAddress(), this);
+//        RSMSCommandManager.getInstance().enable();
 
-        PWLogger.e("BIG_ENDIAN 2:" + ByteUtils.bytes2Flaot(data2));
-        PWLogger.e("LITTLE_ENDIAN 2:" + ByteUtils.bytes2Flaot(data2, ByteOrder.LITTLE_ENDIAN));
+        RSMSDTEManager.getInstance().init(this.getMachineHardwareAddress(),"",this);
+        RSMSDTEManager.getInstance().enable();
 
-//        LTB760AFGManager.getInstance().init(this);
-//        LTB760AFGManager.getInstance().enable();
-
-        RSMSManager.getInstance().init(null, this.getMachineHardwareAddress(), this);
-        RSMSManager.getInstance().enable();
-
-        this.handler.sendEmptyMessage(0);
+//        handler.sendEmptyMessageDelayed(0,2000);
     }
 
     private void refreshTextView(final String text) {
@@ -85,18 +81,6 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         });
     }
 
-    private boolean checkUpload(LTB760AFGEntity entity) {
-        if (!this.ready) {
-            return false;
-        }
-//        if (!entity.isStatusEquals(this.entity) || !entity.isAlarmsEquals(this.entity)) {
-//            return true;
-//        }
-        if (System.currentTimeMillis() - this.lastTime >= 1000 * this.status.getUploadFrequency()) {
-            return true;
-        }
-        return false;
-    }
 
     private byte[] getMachineHardwareAddress() {
         try {
@@ -117,54 +101,114 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        this.handler.removeMessages(0);
-//        LTB760AFGManager.getInstance().disable();
-//        LTB760AFGManager.getInstance().release();
-        RSMSManager.getInstance().disable();
-        RSMSManager.getInstance().release();
+        LTB760AFGManager.getInstance().disable();
+        LTB760AFGManager.getInstance().release();
+        RSMSCommandManager.getInstance().disable();
+        RSMSCommandManager.getInstance().release();
+        RSMSDTEManager.getInstance().disable();
+        RSMSDTEManager.getInstance().release();
     }
 
     public void onClicked(View view) {
         switch (view.getId()) {
             case R.id.query_status:
-                RSMSManager.getInstance().queryStatus();
+                RSMSCommandManager.getInstance().queryStatus();
                 break;
             case R.id.query_network:
-                RSMSManager.getInstance().queryNetwork();
+                RSMSCommandManager.getInstance().queryNetwork();
                 break;
             case R.id.query_modules:
-                RSMSManager.getInstance().queryModules();
+                RSMSCommandManager.getInstance().queryModules();
+                break;
+            case R.id.query_pda_modules:
+                RSMSCommandManager.getInstance().queryPDAModules();
                 break;
             case R.id.quit_config:
-                RSMSManager.getInstance().quitConfigModel();
+                RSMSCommandManager.getInstance().quitConfigModel();
                 break;
             case R.id.clear_cache:
-                RSMSManager.getInstance().clearCache();
+                RSMSCommandManager.getInstance().clearCache();
                 break;
             case R.id.recovery:
-                RSMSManager.getInstance().recovery();
+                RSMSCommandManager.getInstance().recovery();
                 break;
             case R.id.enter_dce_config:
-                RSMSManager.getInstance().enterDCEConfigModel();
+                RSMSCommandManager.getInstance().enterDTEConfigModel();
                 break;
             case R.id.enter_pda_config:
-                RSMSManager.getInstance().enterPDAConfigModel();
+                RSMSCommandManager.getInstance().enterPDAConfigModel();
                 break;
             case R.id.clear:
-                this.refreshTextView("");
+                textView.setText("");
                 break;
-            case R.id.config_network:
-                RSMSConfigEntity entity = new RSMSConfigEntity();
+            case R.id.config_network1: {
+                RSMSDTEModelConfigEntity entity = new RSMSDTEModelConfigEntity();
+                entity.setModel((byte) 0x01);
+                entity.setAddress("msg.haierbiomedical.com");
+                entity.setPort("1777");
+//                entity.setWifiName("Bio_Wireless");
+//                entity.setWifiPassword("12345678");
+//                entity.setApn("spe.inet4gd.gdsp");
+//                entity.setApnName("");
+//                entity.setApnPassword("");
+                RSMSCommandManager.getInstance().configDTEModel(entity);
+                break;
+            }
+            case R.id.config_network2: {
+                RSMSDTEModelConfigEntity entity = new RSMSDTEModelConfigEntity();
                 entity.setModel((byte) 0x02);
-                entity.setAddress("ucool.haierbiomeidcal.com");
-                entity.setPort("20000");
-
-                entity.setWifiName("Haier-Guest");
-                entity.setWifiPassword("1234567890");
-                entity.setApn("cmnet");
-                entity.setApnName("haierbiomedical");
-                entity.setApnPassword("password");
-                RSMSManager.getInstance().configNetwork(entity);
+                entity.setAddress("msg.haierbiomedical.com");
+                entity.setPort("1777");
+                entity.setWifiName("Bio_Wireless");
+                entity.setWifiPassword("1234,5678");
+                entity.setApn("spe.inet4gd.gdsp");
+                entity.setApnName("");
+                entity.setApnPassword("");
+                RSMSCommandManager.getInstance().configDTEModel(entity);
+                break;
+            }
+            case R.id.config_network3: {
+                RSMSDTEModelConfigEntity entity = new RSMSDTEModelConfigEntity();
+                entity.setModel((byte) 0x03);
+                entity.setAddress("msg.haierbiomedical.com");
+                entity.setPort("1777");
+                entity.setWifiName("Bio_Wireless");
+                entity.setWifiPassword("12345678");
+                entity.setApn("spe.inet4gd.gdsp");
+                entity.setApnName("");
+                entity.setApnPassword("");
+                RSMSCommandManager.getInstance().configDTEModel(entity);
+                break;
+            }
+            case R.id.config_becode:{
+                RSMSAModelConfigEntity entity = new RSMSAModelConfigEntity();
+                entity.setCode("BE0F0P01T00QGJ190004");
+                entity.setUsername("haier");
+                entity.setPassword("1234");
+                RSMSCommandManager.getInstance().configAModel(entity);
+                break;
+            }
+            case R.id.collection:
+                byte[] data = {
+                        (byte) 0x85, (byte) 0xFE, (byte) 0x31, (byte) 0xF8, (byte) 0xD8,
+                        (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xCE, (byte) 0xFF,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC,
+                        (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF,
+                        (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC,
+                        (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF,
+                        (byte) 0x24, (byte) 0xFA, (byte) 0x88, (byte) 0xFA, (byte) 0xC0,
+                        (byte) 0xF9, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
+                        (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00
+                };
+                RSMSCommandManager.getInstance().collectionDeviceData(new TestSendEntity(data));
                 break;
         }
     }
@@ -197,19 +241,16 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
 
     @Override
     public void onLTB760AFGStateChanged(LTB760AFGEntity entity) {
-        if (this.checkUpload(entity)) {
+        RSMSDTEManager manager = RSMSDTEManager.getInstance();
+        boolean ready = manager.isReady();
+        boolean overtime = manager.isArrivalTime();
+        boolean changed =  (!entity.isStatusEquals(this.entity) || !entity.isAlarmsEquals(this.entity));
+        if(ready && (overtime || changed)){
             LTB760AFGCollectionEntity collection = new LTB760AFGCollectionEntity();
             collection.setEntity(entity);
-            RSMSManager.getInstance().collectionDeviceData(collection);
+            RSMSDTEManager.getInstance().collectionDeviceData(collection);
         }
         this.entity = entity;
-    }
-
-    @Override
-    public void onRSMSReady() {
-        this.ready = true;
-        this.handler.sendEmptyMessage(0);
-        this.refreshTextView("模块准备完成\n");
     }
 
     @Override
@@ -219,8 +260,12 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
 
     @Override
     public void onRSMSException() {
-        this.ready = false;
         this.refreshTextView("模块连接断开，三秒后重新连接:\n");
+    }
+
+    @Override
+    public String findDeviceCode() {
+        return null;
     }
 
     @Override
@@ -240,18 +285,23 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
     }
 
     @Override
-    public void onRSMSStatusReceived(RSMSStatusEntity status) {
-        this.status = status;
+    public void onRSMSStatusReceived(RSMSQueryStatusResponseEntity status) {
         this.refreshTextView(status.toString());
     }
 
     @Override
-    public void onRSMSNetworReceived(RSMSNetworkEntity network) {
+    public void onRSMSNetworkReceived(RSMSNetworkResponseEntity network) {
         this.refreshTextView(network.toString());
     }
 
+
     @Override
-    public void onRSMSModulesReceived(RSMSModulesEntity modules) {
+    public void onRSMSModulesReceived(RSMSQueryModulesResponseEntity modules) {
+        this.refreshTextView(modules.toString());
+    }
+
+    @Override
+    public void onRSMSPDAModulesReceived(RSMSQueryPDAModulesResponseEntity modules) {
         this.refreshTextView(modules.toString());
     }
 
@@ -262,16 +312,15 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
 
     @Override
     public void onRSMSDataCollectionReceived() {
-        this.lastTime = System.currentTimeMillis();
         this.refreshTextView("数据采集成功\n");
     }
 
     @Override
-    public void onRSMSControlReceived(RSMSControlEntity entity) {
+    public void onRSMSControlReceived(RSMSControlCommandEntity entity) {
         switch (entity.getCommand()) {
             case (short) ControlTools.RSMS_CONTROL_TEMPTURE_COMMAND:
                 TemptureEntity tempture = ControlTools.parseTemptureEntity(entity.getControl());
-                this.refreshTextView("收到控制温度指令，设置温度为："+ tempture.getTempture() +"\n");
+                this.refreshTextView("收到控制温度指令，设置温度为：" + tempture.getTempture() + "\n");
                 break;
             default:
                 break;
@@ -279,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
     }
 
     @Override
-    public void onRSMSRecoveryReceived(RSMSResponseEntity response) {
+    public void onRSMSRecoveryReceived(RSMSCommontResponseEntity response) {
         if (0x01 == response.getResponse()) {
             this.refreshTextView("恢复出厂设置成功\n");
         } else {
@@ -288,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
     }
 
     @Override
-    public void onRSMSClearCacheReceived(RSMSResponseEntity response) {
+    public void onRSMSClearCacheReceived(RSMSCommontResponseEntity response) {
         if (0x01 == response.getResponse()) {
             this.refreshTextView("清空本地缓存成功\n");
         } else {
@@ -297,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
     }
 
     @Override
-    public void onRSMSQuitConfigReceived(RSMSResponseEntity response) {
+    public void onRSMSQuitConfigReceived(RSMSCommontResponseEntity response) {
         if (0x01 == response.getResponse()) {
             this.refreshTextView("退出配置模式成功\n");
         } else {
@@ -306,16 +355,34 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
     }
 
     @Override
-    public void onRSMSConfigNetworkReceived(RSMSResponseEntity response) {
+    public void onRSMSAModelConfigReceived(RSMSCommontResponseEntity response) {
         if (0x01 == response.getResponse()) {
-            this.refreshTextView("配置网络参数成功\n");
+            this.refreshTextView("PDA机编配置成功\n");
         } else {
-            this.refreshTextView("配置网络参数失败\n");
+            this.refreshTextView("PDA机编配置失败\n");
         }
     }
 
     @Override
-    public void onRSMSEnterConfigReceived(RSMSConfigModelResponseEntity response) {
+    public void onRSMSBModelConfigReceived(RSMSCommontResponseEntity response) {
+        if (0x01 == response.getResponse()) {
+            this.refreshTextView("PDA配置网络参数成功\n");
+        } else {
+            this.refreshTextView("PDA配置网络参数失败\n");
+        }
+    }
+
+    @Override
+    public void onRSMSDTEModelConfigReceived(RSMSCommontResponseEntity response) {
+        if (0x01 == response.getResponse()) {
+            this.refreshTextView("DTE配置网络参数成功\n");
+        } else {
+            this.refreshTextView("DTE配置网络参数失败\n");
+        }
+    }
+
+    @Override
+    public void onRSMSEnterConfigReceived(RSMSEnterConfigResponseEntity response) {
         if (0x01 == response.getResponse()) {
             this.refreshTextView("进入" + (((byte) 0xB0 == response.getConfigModel()) ? "串口" : "PDA") + "配置模式成功\n");
         } else {
@@ -325,33 +392,96 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
 
 
 
+
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            byte[] data = {
-                    (byte)0x85, (byte)0xFE, (byte)0x31, (byte)0xF8, (byte)0xD8,
-                    (byte)0xFF, (byte)0xD8, (byte)0xFF, (byte)0xCE, (byte)0xFF,
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-                    (byte)0xDC, (byte)0xFF, (byte)0xDC, (byte)0xFF, (byte)0xDC,
-                    (byte)0xFF, (byte)0xDC, (byte)0xFF, (byte)0xDC, (byte)0xFF,
-                    (byte)0xDC, (byte)0xFF, (byte)0xDC, (byte)0xFF, (byte)0xDC,
-                    (byte)0xFF, (byte)0xDC, (byte)0xFF, (byte)0xDC, (byte)0xFF,
-                    (byte)0x24, (byte)0xFA, (byte)0x88, (byte)0xFA, (byte)0xC0,
-                    (byte)0xF9, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00,
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01,
-                    (byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00,
-                    (byte)0x00, (byte)0x01, (byte)0x01, (byte)0x01, (byte)0x01,
-                    (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00
-            };
-            if(checkUpload(null)) {
-                RSMSManager.getInstance().collectionDeviceData(new TestSendEntity(data));
-            }
-            this.sendEmptyMessageDelayed(0,1000);
+            RSMSDTEManager manager = RSMSDTEManager.getInstance();
+            boolean ready = manager.isReady();
+            boolean overtime = manager.isArrivalTime();
+//            if(ready && overtime){
+                byte[] data = {
+                        (byte) 0x85, (byte) 0xFE, (byte) 0x31, (byte) 0xF8, (byte) 0xD8,
+                        (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xCE, (byte) 0xFF,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC,
+                        (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF,
+                        (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC,
+                        (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF,
+                        (byte) 0x24, (byte) 0xFA, (byte) 0x88, (byte) 0xFA, (byte) 0xC0,
+                        (byte) 0xF9, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
+                        (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00
+                };
+                manager.collectionDeviceData(new TestSendEntity(data));
+//            }
+            handler.sendEmptyMessageDelayed(0,2000);
         }
     };
+
+    @Override
+    public void onPDAConfigQuited() {
+        if(EmptyUtils.isNotEmpty(this.qrCodeDialog)) {
+            this.qrCodeDialog.dismiss();
+            this.qrCodeDialog = null;
+        }
+    }
+
+    @Override
+    public void onDTEConfigQuited() {
+
+    }
+
+    @Override
+    public void onDTEConfigEntered() {
+
+    }
+
+    @Override
+    public void onPDAConfigEntered() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showQRCodeDialog();
+            }
+        });
+    }
+
+    @Override
+    public void onDETMacChanged(String mac) {
+        if(EmptyUtils.isNotEmpty(this.qrCodeDialog)){
+            this.qrCodeDialog.changeMac(mac);
+        }
+    }
+
+    @Override
+    public void onDeviceCodeChanged(String dceMac) {
+        //TODO 保存设备BE码
+    }
+
+    @Override
+    public void onNetworkReceived(RSMSNetworkResponseEntity network) {
+
+    }
+
+    @Override
+    public void onModulesReceived(RSMSQueryModulesResponseEntity modules) {
+
+    }
+
+    private void showQRCodeDialog(){
+        if(EmptyUtils.isEmpty(this.qrCodeDialog)){
+            this.qrCodeDialog = new QRCodeDialog(this);
+        }
+        if(!this.qrCodeDialog.isShowing()) {
+            this.qrCodeDialog.show();
+        }
+    }
 }

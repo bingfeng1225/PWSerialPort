@@ -1,6 +1,6 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
-public class RSMSControlEntity {
+public class RSMSControlCommandEntity {
     private byte year; //年
     private byte month;//月
     private byte day;//日
@@ -11,7 +11,7 @@ public class RSMSControlEntity {
     private byte[] control;
 
 
-    public RSMSControlEntity() {
+    public RSMSControlCommandEntity() {
 
     }
 

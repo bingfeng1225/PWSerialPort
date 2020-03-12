@@ -1,16 +1,7 @@
-package cn.haier.bio.medical.serialport.rsms.entity.send;
+package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
-import cn.haier.bio.medical.serialport.rsms.tools.RSMSTools;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-//4G模式，仅填充4G参数
-//WIFI模式，仅填充WIFI参数
-//4G和WIFI模式，填充4G和WIFI参数
-//增加国内国外标志，根据国内国外标志选择性填充APN参数
-
-public class RSMSConfigEntity implements IRSMSSendEntity {
-    private byte model;
+public class RSMSNetworkResponseEntity {
+    private byte model;//联网模式
 
     private String port;//端口
     private String address;//服务器域名/IP地址
@@ -22,7 +13,8 @@ public class RSMSConfigEntity implements IRSMSSendEntity {
     private String apnName;//APN用户名
     private String apnPassword;//APN密码
 
-    public RSMSConfigEntity() {
+
+    public RSMSNetworkResponseEntity() {
 
     }
 
@@ -91,19 +83,20 @@ public class RSMSConfigEntity implements IRSMSSendEntity {
     }
 
     @Override
-    public byte[] packageSendMessage() {
-        ByteBuf buffer = Unpooled.buffer();
-        buffer.writeByte(model);
-        buffer.writeBytes(RSMSTools.packageString(address));
-        buffer.writeBytes(RSMSTools.packageString(port));
-        buffer.writeBytes(RSMSTools.packageString(wifiName));
-        buffer.writeBytes(RSMSTools.packageString(wifiPassword));
-        buffer.writeBytes(RSMSTools.packageString(apn));
-        buffer.writeBytes(RSMSTools.packageString(apnName));
-        buffer.writeBytes(RSMSTools.packageString(apnPassword));
-        byte[] data = new byte[buffer.readableBytes()];
-        buffer.readBytes(data, 0, buffer.readableBytes());
-        buffer.release();
-        return data;
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("联网模式：" + this.model + "\n");
+
+        buffer.append("服务器地址：" + this.address + "\n");
+        buffer.append("服务器端口：" + this.port + "\n");
+
+        buffer.append("WIFI名称：" + this.wifiName + "\n");
+        buffer.append("WIFI密码：" + this.wifiPassword + "\n");
+
+        buffer.append("APN：" + this.apn + "\n");
+        buffer.append("APN名称：" + this.apnName + "\n");
+        buffer.append("APN密码：" + this.apnPassword + "\n");
+
+        return buffer.toString();
     }
 }

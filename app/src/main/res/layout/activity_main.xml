@@ -41,6 +41,15 @@
             android:onClick="onClicked"
             android:text="查询模块参数" />
 
+        <Button
+            android:id="@+id/query_pda_modules"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="查询PDA模块参数" />
+
 
         <Button
             android:id="@+id/enter_dce_config"
@@ -70,14 +79,40 @@
             android:text="退出配置模式" />
 
         <Button
-            android:id="@+id/config_network"
+            android:id="@+id/config_network1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:layout_weight="1"
             android:onClick="onClicked"
-            android:text="配置网络参数" />
+            android:text="网络参数(4G)" />
 
+        <Button
+            android:id="@+id/config_network2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="网络参数(WIFI)" />
+
+        <Button
+            android:id="@+id/config_network3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="网络参数(AUTO)" />
+
+        <Button
+            android:id="@+id/config_becode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="机编配置" />
 
         <Button
             android:id="@+id/clear_cache"
@@ -97,21 +132,22 @@
             android:onClick="onClicked"
             android:text="恢复出厂设置" />
 
+        <Button
+            android:id="@+id/collection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:onClick="onClicked"
+            android:text="模拟数据采集" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@drawable/board_radius">
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:scrollbars="vertical"
-            android:fadeScrollbars="false"
-            android:layout_weight="1" />
+        android:background="@drawable/board_radius"
+        android:orientation="vertical">
+
         <Button
             android:id="@+id/clear"
             android:layout_width="match_parent"
@@ -119,6 +155,15 @@
             android:layout_margin="10dp"
             android:onClick="onClicked"
             android:text="清空数据记录" />
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/white"
+            android:fadeScrollbars="false"
+            android:scrollbars="vertical" />
     </LinearLayout>
 
 </LinearLayout>

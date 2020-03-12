@@ -45,6 +45,7 @@ public class TZFPSerialPort implements PWSerialPortListener {
 
 
     public TZFPSerialPort() {
+        
     }
 
     public void init(ITZFPListener listener) {

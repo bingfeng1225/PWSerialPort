@@ -1,25 +1,25 @@
 package cn.haier.bio.medical.serialport.rsms;
 
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSConfigModelResponseEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSModulesEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSResponseEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSStatusEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSCommontResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSControlCommandEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSEnterConfigResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSNetworkResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryModulesResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryPDAModulesResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.recv.RSMSQueryStatusResponseEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.IRSMSSendEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigModelEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSAModelConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSBModelConfigEentity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSControlResponseEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSDTEModelConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSEnterConfigModelEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSQueryStatusEntity;
+import cn.haier.bio.medical.serialport.rsms.listener.IRSMSListener;
 import cn.haier.bio.medical.serialport.rsms.tools.RSMSTools;
 import cn.haier.bio.medical.serialport.tools.ByteBufTools;
 import cn.qd.peiwen.pwlogger.PWLogger;
@@ -32,12 +32,9 @@ import io.netty.buffer.Unpooled;
 
 public class RSMSSerialPort implements PWSerialPortListener {
     private ByteBuf buffer;
-    private RSMSHandler handler;
-    private HandlerThread thread;
     private PWSerialPortHelper helper;
 
     private byte[] mac;
-    private boolean ready = false;
     private boolean enabled = false;
     private WeakReference<IRSMSListener> listener;
 
@@ -46,7 +43,6 @@ public class RSMSSerialPort implements PWSerialPortListener {
     }
 
     public void init(byte[] mac, IRSMSListener listener) {
-        createHandler();
         createBuffer();
         createHelper();
         this.mac = RSMSTools.generateMac(mac);
@@ -72,7 +68,7 @@ public class RSMSSerialPort implements PWSerialPortListener {
         entity.setMac(this.mac);
         entity.setMcu(RSMSTools.DEFAULT_MAC);
         String code = null;
-        if(EmptyUtils.isNotEmpty(this.listener)){
+        if (EmptyUtils.isNotEmpty(this.listener)) {
             code = this.listener.get().findDeviceCode();
         }
         entity.setCode(RSMSTools.generateCode(code));
@@ -87,6 +83,10 @@ public class RSMSSerialPort implements PWSerialPortListener {
         this.sendCommand(RSMSTools.RSMS_COMMAND_QUERY_MODULES);
     }
 
+    public void queryPDAModules() {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_QUERY_PDA_MODULES);
+    }
+
     public void recovery() {
         this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_RECOVERY);
     }
@@ -99,19 +99,31 @@ public class RSMSSerialPort implements PWSerialPortListener {
         this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_QUIT);
     }
 
-    public void enterConfigModel(boolean pda) {
-        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_ENTER, new RSMSConfigModelEntity(pda));
+    public void enterDTEConfigModel() {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_ENTER_CONFIG, new RSMSEnterConfigModelEntity(false));
     }
 
-    public void configNetwork(RSMSConfigEntity entity) {
-        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_NETWORK, entity);
+    public void enterPDAConfigModel() {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_ENTER_CONFIG, new RSMSEnterConfigModelEntity(true));
+    }
+
+    public void configAModel(RSMSAModelConfigEntity entity) {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_A_MODEL, entity);
+    }
+
+    public void configBModel(RSMSBModelConfigEentity entity) {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_B_MODEL, entity);
+    }
+
+    public void configDTEModel(RSMSDTEModelConfigEntity entity) {
+        this.sendCommand(RSMSTools.RSMS_COMMAND_CONFIG_DTE_MODEL, entity);
     }
 
     public void collectionDeviceData(IRSMSSendEntity entity) {
         this.sendCommand(RSMSTools.RSMS_COMMAND_COLLECTION_DATA, entity);
     }
 
-    public void responseControlCommand(byte result, IRSMSSendEntity entity){
+    public void responseControlCommand(byte result, IRSMSSendEntity entity) {
         RSMSControlResponseEntity response = new RSMSControlResponseEntity();
         response.setResult(result);
         response.setEntity(entity);
@@ -120,15 +132,11 @@ public class RSMSSerialPort implements PWSerialPortListener {
 
     public void release() {
         this.listener = null;
-        this.destoryHandler();
         this.destoryHelper();
         this.destoryBuffer();
     }
 
     private boolean isInitialized() {
-        if (EmptyUtils.isEmpty(this.handler)) {
-            return false;
-        }
         if (EmptyUtils.isEmpty(this.helper)) {
             return false;
         }
@@ -172,22 +180,6 @@ public class RSMSSerialPort implements PWSerialPortListener {
         }
     }
 
-    private void createHandler() {
-        if (EmptyUtils.isEmpty(this.thread) && EmptyUtils.isEmpty(this.handler)) {
-            this.thread = new HandlerThread("RSMSSerialPort");
-            this.thread.start();
-            this.handler = new RSMSHandler(this.thread.getLooper());
-        }
-    }
-
-    private void destoryHandler() {
-        if (EmptyUtils.isNotEmpty(this.thread)) {
-            this.thread.quitSafely();
-            this.thread = null;
-            this.handler = null;
-        }
-    }
-
     private void sendCommand(int type) {
         this.sendCommand(type, null);
     }
@@ -214,7 +206,6 @@ public class RSMSSerialPort implements PWSerialPortListener {
             return;
         }
         this.buffer.clear();
-        this.handler.sendEmptyMessage(0);
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRSMSConnected();
         }
@@ -225,8 +216,6 @@ public class RSMSSerialPort implements PWSerialPortListener {
         if (!this.isInitialized() || !helper.equals(this.helper)) {
             return;
         }
-        this.ready = false;
-        this.handler.removeMessages(0);
         if (EmptyUtils.isNotEmpty(this.listener)) {
             this.listener.get().onRSMSException();
         }
@@ -242,7 +231,7 @@ public class RSMSSerialPort implements PWSerialPortListener {
             //帧头监测
             int headerIndex = ByteBufTools.indexOf(this.buffer, RSMSTools.HEADER);
             if (headerIndex == -1) {
-                if(this.buffer.readableBytes() >= 256){
+                if (this.buffer.readableBytes() >= 256) {
                     byte[] data = new byte[this.buffer.readableBytes()];
                     this.buffer.readBytes(data, 0, data.length);
                     this.buffer.discardReadBytes();
@@ -294,61 +283,77 @@ public class RSMSSerialPort implements PWSerialPortListener {
             }
             switch (type) {
                 case RSMSTools.RSMS_RESPONSE_QUERY_STATUS: {
-                    RSMSStatusEntity entity = RSMSTools.parseRSMSStatusEntity(data);
+                    RSMSQueryStatusResponseEntity entity = RSMSTools.parseRSMSStatusEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSStatusReceived(entity);
-                        this.handler.sendEmptyMessageDelayed(0, 2000);
-                        if (!this.ready && ((entity.getStatus() & 0x80) == 0x80)) {
-                            this.ready = true;
-                            this.listener.get().onRSMSReady();
-                        }
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_QUERY_NETWORK: {
-                    RSMSNetworkEntity entity = RSMSTools.parseRSMSNetworkEntity(data);
+                    RSMSNetworkResponseEntity entity = RSMSTools.parseRSMSNetworkEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSNetworkReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_QUERY_MODULES: {
-                    RSMSModulesEntity entity = RSMSTools.parseRSMSModulesEntity(data);
+                    RSMSQueryModulesResponseEntity entity = RSMSTools.parseRSMSModulesEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSModulesReceived(entity);
                     }
                     break;
                 }
-                case RSMSTools.RSMS_RESPONSE_CONFIG_ENTER: {
-                    RSMSConfigModelResponseEntity entity = RSMSTools.parseRSMSConfigModelResponseEntity(data);
+                case RSMSTools.RSMS_RESPONSE_QUERY_PDA_MODULES: {
+                    RSMSQueryPDAModulesResponseEntity entity = RSMSTools.parseRSMSPDAModulesEntity(data);
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSPDAModulesReceived(entity);
+                    }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_ENTER_CONFIG: {
+                    RSMSEnterConfigResponseEntity entity = RSMSTools.parseRSMSConfigModelResponseEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSEnterConfigReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_QUIT: {
-                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    RSMSCommontResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSQuitConfigReceived(entity);
                     }
                     break;
                 }
-                case RSMSTools.RSMS_RESPONSE_CONFIG_NETWORK: {
-                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                case RSMSTools.RSMS_RESPONSE_CONFIG_DTE_MODEL: {
+                    RSMSCommontResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
-                        this.listener.get().onRSMSConfigNetworkReceived(entity);
+                        this.listener.get().onRSMSDTEModelConfigReceived(entity);
+                    }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_CONFIG_A_MODEL: {
+                    RSMSCommontResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSAModelConfigReceived(entity);
+                    }
+                    break;
+                }
+                case RSMSTools.RSMS_RESPONSE_CONFIG_B_MODEL: {
+                    RSMSCommontResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    if (EmptyUtils.isNotEmpty(this.listener)) {
+                        this.listener.get().onRSMSBModelConfigReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_RECOVERY: {
-                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    RSMSCommontResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSRecoveryReceived(entity);
                     }
                     break;
                 }
                 case RSMSTools.RSMS_RESPONSE_CONFIG_CLEAR_CACHE: {
-                    RSMSResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
+                    RSMSCommontResponseEntity entity = RSMSTools.parseRSMSResponseEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSClearCacheReceived(entity);
                     }
@@ -360,9 +365,9 @@ public class RSMSSerialPort implements PWSerialPortListener {
                     }
                     break;
                 }
-                case (short)RSMSTools.RSMS_CONTROL_COMMAND: {
-                    this.sendCommand(RSMSTools.RSMS_CONTROL_RESPONSE,null);
-                    RSMSControlEntity entity = RSMSTools.parseRSMSControlEntity(data);
+                case (short) RSMSTools.RSMS_CONTROL_COMMAND: {
+                    this.sendCommand(RSMSTools.RSMS_CONTROL_RESPONSE, null);
+                    RSMSControlCommandEntity entity = RSMSTools.parseRSMSControlEntity(data);
                     if (EmptyUtils.isNotEmpty(this.listener)) {
                         this.listener.get().onRSMSControlReceived(entity);
                     }
@@ -374,31 +379,6 @@ public class RSMSSerialPort implements PWSerialPortListener {
                         this.listener.get().onRSMSUnknownReceived();
                     }
                     PWLogger.d("指令" + ByteUtils.bytes2HexString(bytes, true) + "暂不支持");
-                    break;
-            }
-        }
-    }
-
-
-    private class RSMSHandler extends Handler {
-        public RSMSHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 0: {
-                    this.removeMessages(0);
-                    RSMSSerialPort.this.queryStatus();
-                    break;
-                }
-                case 1: {
-                    RSMSSerialPort.this.queryModules();
-                    break;
-                }
-                default:
                     break;
             }
         }

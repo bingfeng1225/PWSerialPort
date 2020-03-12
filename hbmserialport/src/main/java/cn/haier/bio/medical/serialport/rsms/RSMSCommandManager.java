@@ -1,25 +1,27 @@
 package cn.haier.bio.medical.serialport.rsms;
 
 import cn.haier.bio.medical.serialport.rsms.entity.send.IRSMSSendEntity;
-import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSAModelConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSBModelConfigEentity;
+import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSDTEModelConfigEntity;
+import cn.haier.bio.medical.serialport.rsms.listener.IRSMSListener;
 import cn.qd.peiwen.pwtools.EmptyUtils;
 
-public class RSMSManager {
-
+public class RSMSCommandManager {
     private RSMSSerialPort serialPort;
-    private static RSMSManager manager;
+    private static RSMSCommandManager manager;
 
-    public static RSMSManager getInstance() {
+    public static RSMSCommandManager getInstance() {
         if (manager == null) {
-            synchronized (RSMSManager.class) {
+            synchronized (RSMSCommandManager.class) {
                 if (manager == null)
-                    manager = new RSMSManager();
+                    manager = new RSMSCommandManager();
             }
         }
         return manager;
     }
 
-    private RSMSManager() {
+    private RSMSCommandManager() {
 
     }
 
@@ -60,6 +62,12 @@ public class RSMSManager {
         }
     }
 
+    public void queryPDAModules() {
+        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+            this.serialPort.queryPDAModules();
+        }
+    }
+
     public void recovery() {
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
             this.serialPort.recovery();
@@ -78,21 +86,33 @@ public class RSMSManager {
         }
     }
 
-    public void enterDCEConfigModel() {
+    public void enterDTEConfigModel() {
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
-            this.serialPort.enterConfigModel(false);
+            this.serialPort.enterDTEConfigModel();
         }
     }
 
     public void enterPDAConfigModel() {
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
-            this.serialPort.enterConfigModel(true);
+            this.serialPort.enterPDAConfigModel();
         }
     }
 
-    public void configNetwork(RSMSConfigEntity entity) {
+    public void configDTEModel(RSMSDTEModelConfigEntity entity) {
         if (EmptyUtils.isNotEmpty(this.serialPort)) {
-            this.serialPort.configNetwork(entity);
+            this.serialPort.configDTEModel(entity);
+        }
+    }
+
+    public void configAModel(RSMSAModelConfigEntity entity) {
+        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+            this.serialPort.configAModel(entity);
+        }
+    }
+
+    public void configBModel(RSMSBModelConfigEentity entity) {
+        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+            this.serialPort.configBModel(entity);
         }
     }
 

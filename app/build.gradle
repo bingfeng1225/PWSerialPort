@@ -9,21 +9,31 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
         ndk {
-            abiFilters 'armeabi-v7a','x86','armeabi'
+            abiFilters 'armeabi-v7a', 'x86', 'armeabi'
         }
         splits {
             abi {
                 enable true
                 reset()
-                include 'x86', 'armeabi-v7a','armeabi'
+                include 'x86', 'armeabi-v7a', 'armeabi'
                 universalApk true
             }
+        }
+    }
+    signingConfigs {
+        magton {
+            keyPassword "android"
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            storeFile file("./systemDebug.keystore")
         }
     }
     buildTypes {
         debug {
             minifyEnabled false
+            signingConfig signingConfigs.magton
             buildConfigField "String", "PW_LOG_LEVEL", "\"ALL\""
             buildConfigField "boolean", "PW_LOG_FILE", "true"
             buildConfigField "boolean", "PW_LOG_LOGCAT", "true"
@@ -31,6 +41,7 @@ android {
         }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.magton
             buildConfigField "String", "PW_LOG_LEVEL", "\"ERROR\""
             buildConfigField "boolean", "PW_LOG_FILE", "true"
             buildConfigField "boolean", "PW_LOG_LOGCAT", "false"
@@ -45,8 +56,19 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(path: ':hbmserialport')
+    implementation 'com.google.zxing:core:3.3.2'
+
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.1'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.0'
+
     implementation 'com.github.bingfeng1225:PWLog4j:1.0.0'
     implementation 'com.github.bingfeng1225:PWTools:1.1.2'
+    implementation 'com.github.bingfeng1225:PWNetworkInterface:1.0.3'
+
+    implementation 'info.hoang8f:android-segmented:1.0.6'
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation group: 'log4j', name: 'log4j', version: '1.2.17'
     implementation group: 'io.netty', name: 'netty-all', version: '4.1.43.Final'

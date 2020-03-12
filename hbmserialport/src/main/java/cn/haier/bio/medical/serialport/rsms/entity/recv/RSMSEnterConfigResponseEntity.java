@@ -1,10 +1,10 @@
 package cn.haier.bio.medical.serialport.rsms.entity.recv;
 
-public class RSMSConfigModelResponseEntity {
+public class RSMSEnterConfigResponseEntity {
     private byte response;
     private byte configModel;
 
-    public RSMSConfigModelResponseEntity() {
+    public RSMSEnterConfigResponseEntity() {
 
     }
 
@@ -23,6 +23,4 @@ public class RSMSConfigModelResponseEntity {
     public void setConfigModel(byte configModel) {
         this.configModel = configModel;
     }
-
-
 }

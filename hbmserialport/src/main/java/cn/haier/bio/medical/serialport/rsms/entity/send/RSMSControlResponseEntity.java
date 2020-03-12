@@ -9,6 +9,7 @@ public class RSMSControlResponseEntity implements IRSMSSendEntity {
     private IRSMSSendEntity entity;
 
     public RSMSControlResponseEntity() {
+
     }
 
     public byte getResult() {

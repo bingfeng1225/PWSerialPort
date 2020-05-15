@@ -32,7 +32,9 @@ import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSAModelConfigEntity;
 import cn.haier.bio.medical.serialport.rsms.entity.send.RSMSDTEModelConfigEntity;
 import cn.haier.bio.medical.serialport.rsms.listener.IRSMSDTEListener;
 import cn.haier.bio.medical.serialport.rsms.listener.IRSMSListener;
+import cn.haier.bio.medical.serialport.rsms.tools.RSMSTools;
 import cn.qd.peiwen.pwlogger.PWLogger;
+import cn.qd.peiwen.pwtools.ByteUtils;
 import cn.qd.peiwen.pwtools.EmptyUtils;
 
 
@@ -48,8 +50,8 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         this.textView = findViewById(R.id.text);
         this.textView.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        LTB760AFGManager.getInstance().init(this);
-        LTB760AFGManager.getInstance().enable();
+//        LTB760AFGManager.getInstance().init(this);
+//        LTB760AFGManager.getInstance().enable();
 
 //        RSMSCommandManager.getInstance().init(this.getMachineHardwareAddress(), this);
 //        RSMSCommandManager.getInstance().enable();
@@ -58,6 +60,32 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
         RSMSDTEManager.getInstance().enable();
 
 //        handler.sendEmptyMessageDelayed(0,2000);
+
+
+
+
+        byte[] data = {
+                (byte) 0x85, (byte) 0xFE, (byte) 0x31, (byte) 0xF8, (byte) 0xD8,
+                (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xCE, (byte) 0xFF,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC,
+                (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF,
+                (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC,
+                (byte) 0xFF, (byte) 0xDC, (byte) 0xFF, (byte) 0xDC, (byte) 0xFF,
+                (byte) 0x24, (byte) 0xFA, (byte) 0x88, (byte) 0xFA, (byte) 0xC0,
+                (byte) 0xF9, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01,
+                (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
+                (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00
+        };
+
+        byte[] buffer = RSMSTools.packageCommand(RSMSTools.RSMS_COMMAND_COLLECTION_DATA,new TestSendEntity(data));
+        PWLogger.e("data:" + ByteUtils.bytes2HexString(buffer,false," "));
     }
 
     private void refreshTextView(final String text) {
@@ -160,8 +188,8 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
                 entity.setAddress("msg.haierbiomedical.com");
                 entity.setPort("1777");
                 entity.setWifiName("Bio_Wireless");
-                entity.setWifiPassword("1234,5678");
-                entity.setApn("spe.inet4gd.gdsp");
+                entity.setWifiPassword("12345678");
+//                entity.setApn("spe.inet4gd.gdsp");
                 entity.setApnName("");
                 entity.setApnPassword("");
                 RSMSCommandManager.getInstance().configDTEModel(entity);
@@ -174,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements ILTB760AFGListene
                 entity.setPort("1777");
                 entity.setWifiName("Bio_Wireless");
                 entity.setWifiPassword("12345678");
-                entity.setApn("spe.inet4gd.gdsp");
+//                entity.setApn("spe.inet4gd.gdsp");
                 entity.setApnName("");
                 entity.setApnPassword("");
                 RSMSCommandManager.getInstance().configDTEModel(entity);

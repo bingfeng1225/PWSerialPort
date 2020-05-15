@@ -18,7 +18,7 @@
             android:id="@+id/query_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="查询模块状态" />
@@ -27,7 +27,7 @@
             android:id="@+id/query_network"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="查询联网参数" />
@@ -36,7 +36,7 @@
             android:id="@+id/query_modules"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="查询模块参数" />
@@ -45,7 +45,7 @@
             android:id="@+id/query_pda_modules"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="查询PDA模块参数" />
@@ -55,7 +55,7 @@
             android:id="@+id/enter_dce_config"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="进入DCE配置" />
@@ -64,7 +64,7 @@
             android:id="@+id/enter_pda_config"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="进入PDA配置" />
@@ -73,7 +73,7 @@
             android:id="@+id/quit_config"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="退出配置模式" />
@@ -82,7 +82,7 @@
             android:id="@+id/config_network1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="网络参数(4G)" />
@@ -91,7 +91,7 @@
             android:id="@+id/config_network2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="网络参数(WIFI)" />
@@ -100,7 +100,7 @@
             android:id="@+id/config_network3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="网络参数(AUTO)" />
@@ -109,7 +109,7 @@
             android:id="@+id/config_becode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="机编配置" />
@@ -118,7 +118,7 @@
             android:id="@+id/clear_cache"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="清楚本地缓存" />
@@ -127,7 +127,7 @@
             android:id="@+id/recovery"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="恢复出厂设置" />
@@ -136,7 +136,7 @@
             android:id="@+id/collection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:layout_weight="1"
             android:onClick="onClicked"
             android:text="模拟数据采集" />
@@ -152,7 +152,7 @@
             android:id="@+id/clear"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="5dp"
             android:onClick="onClicked"
             android:text="清空数据记录" />
 

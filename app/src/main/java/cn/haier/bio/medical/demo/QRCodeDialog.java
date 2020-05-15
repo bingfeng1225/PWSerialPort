@@ -127,6 +127,4 @@ public class QRCodeDialog extends Dialog implements DialogInterface.OnDismissLis
                     }
                 });
     }
-
-
 }

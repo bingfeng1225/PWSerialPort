@@ -1,2 +1,2 @@
-include ':app', ':pwserialport', ':hbmserialport', ':hbmrfidreader', ':hbmfingerprint', ':hbmltbrefrigerator'
-rootProject.name='PWSerialPort'
+include ':app'
+include ':pwserialport'

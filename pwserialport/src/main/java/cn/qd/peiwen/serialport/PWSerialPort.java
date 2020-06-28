@@ -6,9 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import cn.qd.peiwen.pwlogger.PWLogger;
-import cn.qd.peiwen.pwtools.EmptyUtils;
-
 public class PWSerialPort {
     private long serialPort;
     private boolean released = false;
@@ -22,7 +19,7 @@ public class PWSerialPort {
             throw new IOException("Serial port open failed");
         }
         this.descriptor = this.descriptor(this.serialPort);
-        if (EmptyUtils.isEmpty(this.descriptor)) {
+        if (this.descriptor == null) {
             throw new IOException("Serial port create descriptor failed");
         }
         inputStream = new FileInputStream(this.descriptor);
@@ -54,20 +51,20 @@ public class PWSerialPort {
             this.close(this.serialPort);
             this.serialPort = 0;
         }
-        if (EmptyUtils.isNotEmpty(this.inputStream)) {
+        if (null != this.inputStream) {
             try {
                 this.inputStream.close();
             } catch (Exception e) {
-                PWLogger.d(e);
+                e.printStackTrace();
             } finally {
                 this.inputStream = null;
             }
         }
-        if (EmptyUtils.isNotEmpty(this.outputStream)) {
+        if (null != this.outputStream) {
             try {
                 this.outputStream.close();
             } catch (Exception e) {
-                PWLogger.d(e);
+                e.printStackTrace();
             } finally {
                 this.outputStream = null;
             }
@@ -149,47 +146,33 @@ public class PWSerialPort {
             return this;
         }
 
-        public PWSerialPort build() {
+        public PWSerialPort build() throws Exception {
             File device = new File(path);
             if (!checkDevice(device)) {
-                PWLogger.e("Missing read/write permission " + path);
                 return null;
             }
-            try {
-                return new PWSerialPort(
-                        device,
-                        this.baudrate,
-                        this.stopbits,
-                        this.databits,
-                        this.parity,
-                        this.flowControl
-                );
-            } catch (Exception e) {
-                PWLogger.e(e);
-                return null;
-            }
+            return new PWSerialPort(
+                    device,
+                    this.baudrate,
+                    this.stopbits,
+                    this.databits,
+                    this.parity,
+                    this.flowControl
+            );
         }
 
-        private boolean checkDevice(File device) {
+        private boolean checkDevice(File device) throws Exception {
             if (device.canRead() && device.canWrite()) {
                 return true;
             }
             return chmodDevice(device);
         }
 
-        private boolean chmodDevice(File device) {
-            try {
-                Process su = Runtime.getRuntime().exec("/system/bin/su");
-                String cmd = "chmod 666 " + device.getAbsolutePath() + "\n" + "exit\n";
-                su.getOutputStream().write(cmd.getBytes());
-                if ((su.waitFor() != 0) || !device.canRead() || !device.canWrite()) {
-                    return false;
-                }
-                return true;
-            } catch (Exception e) {
-                PWLogger.e(e);
-                return false;
-            }
+        private boolean chmodDevice(File device) throws Exception {
+            Process su = Runtime.getRuntime().exec("/system/bin/su");
+            String cmd = "chmod 666 " + device.getAbsolutePath() + "\n" + "exit\n";
+            su.getOutputStream().write(cmd.getBytes());
+            return (su.waitFor() == 0) && device.canRead() && device.canWrite();
         }
     }
 }

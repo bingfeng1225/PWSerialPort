@@ -91,7 +91,7 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile
         (JNIEnv *env, jclass cls, jstring path, jstring content) {
     jboolean iscopy;
     const char *path_utf = env->GetStringUTFChars(path, &iscopy);
-    int fd = open(path_utf, O_CREAT | O_RDWR);
+    int fd = open(path_utf, O_CREAT | O_RDWR,0777);
     if (fd == -1) {
         LOGE("Cannot open file (%s) %d", path_utf, errno);
         return;

@@ -8,10 +8,6 @@ import android.os.Message;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import cn.qd.peiwen.pwlogger.PWLogger;
-import cn.qd.peiwen.pwtools.EmptyUtils;
-
-
 public class PWSerialPortHelper {
     //串口地址
     private String path;
@@ -39,9 +35,9 @@ public class PWSerialPortHelper {
     // 1 --> 软件流控
     private int flowControl = 0;
 
-    private int state;
     private int timeout = 0;
     private final String name;
+    private PWSerialPortState state;
     private PWSerialPort serialPort;
     private WeakReference<PWSerialPortListener> listener;
 
@@ -51,14 +47,11 @@ public class PWSerialPortHelper {
     //读取线程
     private ReadThread readThread;
 
-    public static final int PW_SERIAL_PORT_STATE_IDLE = 1;
-    public static final int PW_SERIAL_PORT_STATE_OPENED = 2;
-    public static final int PW_SERIAL_PORT_STATE_CLOSED = 3;
-    public static final int PW_SERIAL_PORT_STATE_RELEASED = 4;
+
 
     public PWSerialPortHelper(String name) {
         this.name = name;
-        this.state = PW_SERIAL_PORT_STATE_RELEASED;
+        this.state = PWSerialPortState.PW_SERIAL_PORT_STATE_RELEASED;
     }
 
     public String getPath() {
@@ -121,13 +114,13 @@ public class PWSerialPortHelper {
         if (isReleased()) {
             this.createProcessHandler();
             this.listener = new WeakReference<>(listener);
-            this.changeSerialProtState(PW_SERIAL_PORT_STATE_IDLE);
+            this.changeSerialProtState(PWSerialPortState.PW_SERIAL_PORT_STATE_IDLE);
         }
     }
 
     public void open() {
         if (isIdle() || isClosed()) {
-            this.changeSerialProtState(PW_SERIAL_PORT_STATE_OPENED);
+            this.changeSerialProtState(PWSerialPortState.PW_SERIAL_PORT_STATE_OPENED);
         }
     }
 
@@ -136,9 +129,8 @@ public class PWSerialPortHelper {
             if (isWriteable()) {
                 this.serialPort.outputStream().write(bytes);
             }
-        } catch (IOException e) {
-            PWLogger.d(e);
-            this.onException();
+        } catch (IOException throwable) {
+            this.onException(throwable);
         }
     }
 
@@ -149,86 +141,98 @@ public class PWSerialPortHelper {
                 this.serialPort.outputStream().flush();
                 this.serialPort.outputStream().getFD().sync();
             }
-        } catch (IOException e) {
-            PWLogger.d(e);
-            this.onException();
+        } catch (IOException throwable) {
+            this.onException(throwable);
         }
     }
 
     public void close() {
         if (this.isOpened()) {
-            this.changeSerialProtState(PW_SERIAL_PORT_STATE_CLOSED);
+            this.changeSerialProtState(PWSerialPortState.PW_SERIAL_PORT_STATE_CLOSED);
         }
     }
 
     public void release() {
         if (!isReleased()) {
-            this.changeSerialProtState(PW_SERIAL_PORT_STATE_RELEASED);
+            this.changeSerialProtState(PWSerialPortState.PW_SERIAL_PORT_STATE_RELEASED);
         }
     }
 
     private boolean isIdle() {
-        if (this.state == PW_SERIAL_PORT_STATE_IDLE) {
+        if (this.state == PWSerialPortState.PW_SERIAL_PORT_STATE_IDLE) {
             return true;
         }
         return false;
     }
 
     private boolean isOpened() {
-        if (this.state == PW_SERIAL_PORT_STATE_OPENED) {
+        if (this.state == PWSerialPortState.PW_SERIAL_PORT_STATE_OPENED) {
             return true;
         }
         return false;
     }
 
     private boolean isClosed() {
-        if (this.state == PW_SERIAL_PORT_STATE_CLOSED) {
+        if (this.state == PWSerialPortState.PW_SERIAL_PORT_STATE_CLOSED) {
             return true;
         }
         return false;
     }
 
     private boolean isReleased() {
-        if (this.state == PW_SERIAL_PORT_STATE_RELEASED) {
+        if (this.state == PWSerialPortState.PW_SERIAL_PORT_STATE_RELEASED) {
             return true;
         }
         return false;
     }
 
+    private boolean isAvailable(){
+        if(this.serialPort == null){
+            return false;
+        }
+        if(this.serialPort.inputStream() == null){
+            return false;
+        }
+        if(this.serialPort.outputStream() == null){
+            return false;
+        }
+        return true;
+    }
+
     private boolean isReadable() {
-        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) && EmptyUtils.isNotEmpty(this.serialPort.inputStream())) {
+        if (this.isOpened() && isAvailable()) {
             return true;
         }
         return false;
     }
 
     private boolean isWriteable() {
-        if (this.isOpened() && EmptyUtils.isNotEmpty(this.serialPort) && EmptyUtils.isNotEmpty(this.serialPort.outputStream())) {
+        if (this.isOpened() && isAvailable()) {
             return true;
         }
         return false;
     }
 
     private synchronized void onOpen() {
-        this.createSerialPort();
-        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+        try {
+            this.createSerialPort();
             this.createReadThread();
-            if (EmptyUtils.isNotEmpty(this.listener)) {
+            if (null != this.listener && null != this.listener.get()) {
                 this.listener.get().onConnected(this);
             }
-        } else {
-            this.onException();
+        }catch (Exception throwable){
+            this.onException(throwable);
         }
     }
 
-    private synchronized void onException() {
+    private synchronized void onException(Throwable throwable) {
         this.destoryReadThread();
         this.destorySerialPort();
         if (!isClosed() && !isReleased()) {
-            if (EmptyUtils.isNotEmpty(this.listener)) {
-                this.listener.get().onException(this);
+            if (null != this.listener && null != this.listener.get()) {
+                this.listener.get().onException(this,throwable);
             }
-            this.phandler.sendEmptyMessageDelayed(PW_SERIAL_PORT_STATE_OPENED, 3000);
+            this.phandler.sendEmptyMessageDelayed(0, 3000);
         }
     }
 
@@ -243,29 +247,32 @@ public class PWSerialPortHelper {
         this.destoryProcessHandler();
     }
 
-    private void changeSerialProtState(int state) {
+    private void changeSerialProtState(PWSerialPortState state) {
         if (this.state != state) {
             this.state = state;
-            this.phandler.sendEmptyMessage(this.state);
+            this.phandler.sendEmptyMessage(0);
+            if (null != listener && null != listener.get()) {
+                listener.get().onStateChanged(this,this.state);
+            }
         }
     }
 
     private void createReadThread() {
-        if (EmptyUtils.isEmpty(this.readThread)) {
+        if (this.readThread == null) {
             this.readThread = new ReadThread();
             this.readThread.start();
         }
     }
 
     private void destoryReadThread() {
-        if (EmptyUtils.isNotEmpty(this.readThread)) {
+        if (null != this.readThread) {
             this.readThread.finish();
             this.readThread = null;
         }
     }
 
-    private void createSerialPort() {
-        if (EmptyUtils.isEmpty(this.serialPort)) {
+    private void createSerialPort() throws Exception {
+        if (this.serialPort == null) {
             this.serialPort = new PWSerialPort.Builder()
                     .path(this.path)
                     .parity(this.parity)
@@ -278,14 +285,14 @@ public class PWSerialPortHelper {
     }
 
     private void destorySerialPort() {
-        if (EmptyUtils.isNotEmpty(this.serialPort)) {
+        if (null != this.serialPort) {
             this.serialPort.release();
             this.serialPort = null;
         }
     }
 
     private void createProcessHandler() {
-        if (EmptyUtils.isEmpty(this.pthread) && EmptyUtils.isEmpty(this.phandler)) {
+        if (this.pthread == null && this.phandler == null) {
             pthread = new HandlerThread("Process-Thread-" + this.name);
             pthread.start();
             phandler = new PHandler(pthread.getLooper());
@@ -293,7 +300,7 @@ public class PWSerialPortHelper {
     }
 
     private void destoryProcessHandler() {
-        if (EmptyUtils.isNotEmpty(this.pthread)) {
+        if (null != this.pthread) {
             pthread.quitSafely();
             pthread = null;
             phandler = null;
@@ -308,22 +315,18 @@ public class PWSerialPortHelper {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
+            switch (state) {
                 case PW_SERIAL_PORT_STATE_IDLE:
-                    PWLogger.d("PW_SERIAL_PORT_STATE_IDLE(" + name + ")");
                     break;
                 case PW_SERIAL_PORT_STATE_OPENED:
                     if (!isClosed() && !isReleased()) {
-                        PWLogger.d("PW_SERIAL_PORT_STATE_OPENED(" + name + ")");
                         PWSerialPortHelper.this.onOpen();
                     }
                     break;
                 case PW_SERIAL_PORT_STATE_CLOSED:
-                    PWLogger.d("PW_SERIAL_PORT_STATE_CLOSED(" + name + ")");
                     PWSerialPortHelper.this.onClose();
                     break;
                 case PW_SERIAL_PORT_STATE_RELEASED:
-                    PWLogger.d("PW_SERIAL_PORT_STATE_RELEASED(" + name + ")");
                     PWSerialPortHelper.this.onRelease();
                     break;
                 default:
@@ -371,15 +374,16 @@ public class PWSerialPortHelper {
                         break;
                     }
                     int length = serialPort.inputStream().read(buffer);
-                    if (EmptyUtils.isNotEmpty(listener)) {
+                    if (null != listener && null != listener.get()) {
                         listener.get().onByteReceived(PWSerialPortHelper.this, buffer, length);
                     }
                 }
-            } catch (Exception e) {
-                PWLogger.d(e);
-                PWSerialPortHelper.this.onException();
+            } catch (Exception throwable) {
+                PWSerialPortHelper.this.onException(throwable);
             } finally {
-                PWLogger.d("PWSerialPort(" + name + ") read thread released");
+                if (null != listener && null != listener.get()) {
+                    listener.get().onReadThreadReleased(PWSerialPortHelper.this);
+                }
             }
         }
     }

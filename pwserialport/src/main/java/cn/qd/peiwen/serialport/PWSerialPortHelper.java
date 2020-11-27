@@ -364,7 +364,7 @@ public class PWSerialPortHelper {
                 this.times = 0;
                 return;
             }
-            long delay = timeout * 1000 * 1000 * 1000;
+            long delay = timeout * 1000 * 1000 * 1000L;
             long offset = System.nanoTime() - this.lastLegalDataTime;
             if (offset > delay) {
                 throw new IOException("PWSerialPort(" + name + ") legal data timeout");

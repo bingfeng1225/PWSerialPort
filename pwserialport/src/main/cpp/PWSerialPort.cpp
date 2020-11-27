@@ -265,7 +265,7 @@ int PWSerialPort::serialPortConfig() {
     options.c_cc[VTIME] = 0;//可以在select中设置
     options.c_cc[VMIN] = 1;//最少读取一个字符
     /*如果发生数据溢出，只接受数据，但是不进行读操作*/
-    tcflush(this->fd, TCIFLUSH);
+    tcflush(this->fd, TCIOFLUSH);
     /*激活配置*/
     if (tcsetattr(this->fd, TCSANOW, &options) < 0) {
         LOGE("tcsetattr failed");

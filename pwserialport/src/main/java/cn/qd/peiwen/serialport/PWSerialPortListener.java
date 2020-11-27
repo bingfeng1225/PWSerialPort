@@ -12,5 +12,5 @@ public interface PWSerialPortListener {
 
     void onStateChanged(PWSerialPortHelper helper,PWSerialPortState state);
 
-    void onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException;
+    boolean onByteReceived(PWSerialPortHelper helper, byte[] buffer, int length) throws IOException;
 }

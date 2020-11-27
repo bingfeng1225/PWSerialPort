@@ -36,6 +36,7 @@ public class PWSerialPortHelper {
     private int flowControl = 0;
 
     private int timeout = 0;
+
     private final String name;
     private PWSerialPortState state;
     private PWSerialPort serialPort;
@@ -46,7 +47,6 @@ public class PWSerialPortHelper {
     private HandlerThread pthread;
     //读取线程
     private ReadThread readThread;
-
 
 
     public PWSerialPortHelper(String name) {
@@ -134,7 +134,7 @@ public class PWSerialPortHelper {
         }
     }
 
-    public synchronized void writeAndFlush(byte[] bytes){
+    public synchronized void writeAndFlush(byte[] bytes) {
         try {
             if (isWriteable()) {
                 this.serialPort.outputStream().write(bytes);
@@ -186,14 +186,14 @@ public class PWSerialPortHelper {
         return false;
     }
 
-    private boolean isAvailable(){
-        if(this.serialPort == null){
+    private boolean isAvailable() {
+        if (this.serialPort == null) {
             return false;
         }
-        if(this.serialPort.inputStream() == null){
+        if (this.serialPort.inputStream() == null) {
             return false;
         }
-        if(this.serialPort.outputStream() == null){
+        if (this.serialPort.outputStream() == null) {
             return false;
         }
         return true;
@@ -220,7 +220,7 @@ public class PWSerialPortHelper {
             if (null != this.listener && null != this.listener.get()) {
                 this.listener.get().onConnected(this);
             }
-        }catch (Exception throwable){
+        } catch (Exception throwable) {
             this.onException(throwable);
         }
     }
@@ -230,7 +230,7 @@ public class PWSerialPortHelper {
         this.destorySerialPort();
         if (!isClosed() && !isReleased()) {
             if (null != this.listener && null != this.listener.get()) {
-                this.listener.get().onException(this,throwable);
+                this.listener.get().onException(this, throwable);
             }
             this.phandler.sendEmptyMessageDelayed(0, 3000);
         }
@@ -252,7 +252,7 @@ public class PWSerialPortHelper {
             this.state = state;
             this.phandler.sendEmptyMessage(0);
             if (null != listener && null != listener.get()) {
-                listener.get().onStateChanged(this,this.state);
+                listener.get().onStateChanged(this, this.state);
             }
         }
     }
@@ -338,9 +338,10 @@ public class PWSerialPortHelper {
     private class ReadThread extends Thread {
         private int times = 0;
         private boolean finished = false;
+        private long lastLegalDataTime = 0;
 
         public ReadThread() {
-
+            this.lastLegalDataTime = System.nanoTime();
         }
 
         public void finish() {
@@ -355,6 +356,18 @@ public class PWSerialPortHelper {
             }
             if (this.times >= timeout) {
                 throw new IOException("PWSerialPort(" + name + ") read timeout");
+            }
+        }
+
+        private void checkLegalDataTimeout() throws IOException {
+            if (timeout == 0) {
+                this.times = 0;
+                return;
+            }
+            long delay = timeout * 1000 * 1000 * 1000;
+            long offset = System.nanoTime() - this.lastLegalDataTime;
+            if (offset > delay) {
+                throw new IOException("PWSerialPort(" + name + ") legal data timeout");
             }
         }
 
@@ -373,9 +386,15 @@ public class PWSerialPortHelper {
                     if (!isReadable()) {
                         break;
                     }
+                    boolean legalData = false;
                     int length = serialPort.inputStream().read(buffer);
                     if (null != listener && null != listener.get()) {
-                        listener.get().onByteReceived(PWSerialPortHelper.this, buffer, length);
+                        legalData = listener.get().onByteReceived(PWSerialPortHelper.this, buffer, length);
+                    }
+                    if (!legalData) {
+                        this.checkLegalDataTimeout();
+                    } else {
+                        this.lastLegalDataTime = System.nanoTime();
                     }
                 }
             } catch (Exception throwable) {

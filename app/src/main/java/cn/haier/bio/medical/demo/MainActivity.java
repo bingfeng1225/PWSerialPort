@@ -1,7 +1,9 @@
 package cn.haier.bio.medical.demo;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import cn.qd.peiwen.serialport.PWSerialPortHelper;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -14,5 +16,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
     }
 }

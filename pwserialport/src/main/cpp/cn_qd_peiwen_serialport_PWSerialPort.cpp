@@ -103,5 +103,6 @@ Java_cn_qd_peiwen_serialport_PWSerialPort_writeFile
         LOGE("Cannot write file (%s) %d", path_utf, errno);
     }
     env->ReleaseStringUTFChars(path, path_utf);
+    fsync(fd);
     close(fd);
 }

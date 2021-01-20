@@ -232,7 +232,7 @@ public class PWSerialPortHelper {
             if (null != this.listener && null != this.listener.get()) {
                 this.listener.get().onException(this, throwable);
             }
-            this.phandler.sendEmptyMessageDelayed(0, 3000);
+            this.phandler.sendEmptyMessageDelayed(0, 2000);
         }
     }
 
